@@ -245,10 +245,59 @@
         selectObject(m);
       }
 
-      // UI hooks: add buttons in toolbar asset-list
-      document.querySelectorAll('.asset-item')[0].addEventListener('click', makeCube);
-      document.querySelectorAll('.asset-item')[1].addEventListener('click', makeSphere);
-      document.querySelectorAll('.asset-item')[2].addEventListener('click', makePlane);
+      // placing / UI hooks: start placing mode when clicking asset buttons
+      let placingType = null;
+      let isDragging = false;
+      const planeY = new THREE.Plane(new THREE.Vector3(0,1,0), 0); // ground plane y=0
+      const assetItems = document.querySelectorAll('.asset-item');
+      assetItems[0].addEventListener('click', ()=> startPlacing('cube'));
+      assetItems[1].addEventListener('click', ()=> startPlacing('sphere'));
+      assetItems[2].addEventListener('click', ()=> startPlacing('plane'));
+
+      function startPlacing(type){
+        placingType = type;
+        controls.enabled = false;
+        document.body.style.cursor = 'crosshair';
+        // small visual hint
+        const top = document.querySelector('.viewport-top div');
+        if(top) top.textContent = 'Click on viewport to place: ' + type;
+      }
+
+      function stopPlacing(){
+        placingType = null;
+        controls.enabled = true;
+        document.body.style.cursor = '';
+        const top = document.querySelector('.viewport-top div');
+        if(top) top.textContent = 'View: Perspective • Scene: Default';
+      }
+
+      function createCubeAt(pos){
+        const geo = new THREE.BoxGeometry(1,1,1);
+        const mat = new THREE.MeshStandardMaterial({color:0x8888ff});
+        const m = new THREE.Mesh(geo, mat);
+        m.position.copy(pos || new THREE.Vector3());
+        m.name = 'Cube_'+(objects.length+1);
+        return m;
+      }
+
+      function createSphereAt(pos){
+        const geo = new THREE.SphereGeometry(0.6, 32, 24);
+        const mat = new THREE.MeshStandardMaterial({color:0xff8888});
+        const m = new THREE.Mesh(geo, mat);
+        m.position.copy(pos || new THREE.Vector3());
+        m.name = 'Sphere_'+(objects.length+1);
+        return m;
+      }
+
+      function createPlaneAt(pos){
+        const geo = new THREE.PlaneGeometry(2,2);
+        const mat = new THREE.MeshStandardMaterial({color:0x88ff88, side:THREE.DoubleSide});
+        const m = new THREE.Mesh(geo, mat);
+        m.rotation.x = -Math.PI/2;
+        m.position.copy(pos || new THREE.Vector3());
+        m.name = 'Plane_'+(objects.length+1);
+        return m;
+      }
 
       // selection and property binding
       function selectObject(obj){
@@ -259,16 +308,61 @@
         updatePropertyPanel();
       }
 
-      // basic raycast click to select
+      // basic raycast + placing + drag to move
       const raycaster = new THREE.Raycaster();
       const mouse = new THREE.Vector2();
+      const _tmpVec = new THREE.Vector3();
+
       renderer.domElement.addEventListener('pointerdown', (e)=>{
         const rect = renderer.domElement.getBoundingClientRect();
         mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
         mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
         raycaster.setFromCamera(mouse, camera);
+
+        if(placingType){
+          // place on ground plane
+          const pos = new THREE.Vector3();
+          raycaster.ray.intersectPlane(planeY, pos);
+          let obj;
+          if(placingType === 'cube') obj = createCubeAt(pos);
+          if(placingType === 'sphere') obj = createSphereAt(pos);
+          if(placingType === 'plane') obj = createPlaneAt(pos);
+          if(obj){ scene.add(obj); objects.push(obj); selectObject(obj); }
+          stopPlacing();
+          return;
+        }
+
         const hits = raycaster.intersectObjects(objects, false);
-        if(hits.length) selectObject(hits[0].object);
+        if(hits.length){
+          const obj = hits[0].object;
+          selectObject(obj);
+          // start drag for positioning
+          if(obj === selected){
+            isDragging = true;
+            controls.enabled = false;
+          }
+        } else {
+          // click on empty space -> deselect
+          selectObject(null);
+        }
+      });
+
+      renderer.domElement.addEventListener('pointermove', (e)=>{
+        const rect = renderer.domElement.getBoundingClientRect();
+        mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        if(isDragging && selected){
+          raycaster.setFromCamera(mouse, camera);
+          const pos = new THREE.Vector3();
+          if(raycaster.ray.intersectPlane(planeY, pos)){
+            selected.position.copy(pos);
+            updatePropertyPanel();
+          }
+        }
+      });
+
+      window.addEventListener('pointerup', ()=>{
+        if(isDragging){ isDragging = false; controls.enabled = true; }
       });
 
       // property inputs

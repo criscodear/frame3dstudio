@@ -129,18 +129,29 @@
         <!-- resilient asset/tool handlers: queue clicks if main script not ready -->
         <script>
           (function(){
-            // ensure global handlers exist to accept clicks immediately
-            if(!window._assetClick){
-              window.__assetQueue = window.__assetQueue || [];
-              window._assetClick = function(type){
-                // if startPlacing is available, call it; otherwise queue
-                if(window.startPlacing && typeof window.startPlacing === 'function'){
-                  try{ window.startPlacing(type); return; }catch(e){ console.error(e); }
+            // Global state for asset placement
+            window.frame3d = {
+              placingType: null,
+              ready: false,
+              queue: []
+            };
+
+            // Global click handler for assets
+            window._assetClick = function(type){
+              if(window.frame3d.ready){
+                try{ 
+                  window.startPlacing(type);
+                  const s = document.getElementById('jsStatus');
+                  if(s) s.textContent = 'Selecionado: ' + type + ' - Clique no cenário para posicionar';
+                  return;
+                }catch(e){ 
+                  console.error('Erro ao iniciar posicionamento:', e); 
                 }
-                window.__assetQueue.push(type);
-                const s = document.getElementById('jsStatus'); if(s) s.textContent = 'Queued: '+type;
-              };
-            }
+              }
+              window.frame3d.queue.push(type);
+              const s = document.getElementById('jsStatus');
+              if(s) s.textContent = 'Na fila: ' + type;
+            };
 
             if(!window._toolClick){
               window._toolClick = function(name){ const s = document.getElementById('jsStatus'); if(s) s.textContent = 'Tool: '+name; };
@@ -208,19 +219,28 @@
     <script src="https://unpkg.com/three@0.158.0/examples/js/controls/OrbitControls.js"></script>
     <script>
     // Global state & functions
-    window.placingType = null;
     window.startPlacing = function(type){
       const statusEl = document.getElementById('jsStatus');
       if(!window.THREE){
-        if(statusEl) statusEl.textContent = 'Error: Three.js not loaded';
+        if(statusEl) statusEl.textContent = 'Erro: Three.js não carregado';
         return;
       }
-      window.placingType = type;
+      window.frame3d.placingType = type;
       if(window.orbitControls) window.orbitControls.enabled = false;
       document.body.style.cursor = 'crosshair';
       const top = document.querySelector('.viewport-top div');
-      if(top) top.textContent = 'Click on viewport to place: ' + type;
-      if(statusEl) statusEl.textContent = 'Ready to place: ' + type;
+      if(top) top.textContent = 'Clique no cenário para posicionar: ' + type;
+      if(statusEl) statusEl.textContent = 'Pronto para posicionar: ' + type;
+
+      // Visual feedback
+      const items = document.querySelectorAll('.asset-item');
+      items.forEach(item => {
+        if(item.getAttribute('data-type') === type){
+          item.style.background = 'rgba(14, 165, 233, 0.2)';
+        } else {
+          item.style.background = '';
+        }
+      });
     };
     
     document.addEventListener('DOMContentLoaded', ()=>{
@@ -239,6 +259,8 @@
 
       window.orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
       window.orbitControls.enableDamping = true;
+      window.orbitControls.dampingFactor = 0.05;
+      window.orbitControls.screenSpacePanning = true;
 
       const ambient = new THREE.HemisphereLight(0xffffff, 0x444444, 0.6);
       scene.add(ambient);
@@ -280,22 +302,31 @@
       let isDragging = false;
       const planeY = new THREE.Plane(new THREE.Vector3(0,1,0), 0); // ground plane y=0
 
-      // Now handle any clicks queued before initialization
-      if(window.__assetQueue && window.__assetQueue.length){
-        window.__assetQueue.forEach(type => {
+      // Mark as ready and handle any queued clicks
+      window.frame3d.ready = true;
+      if(window.frame3d.queue.length > 0){
+        window.frame3d.queue.forEach(type => {
           if(window.startPlacing) window.startPlacing(type);
         });
-        window.__assetQueue = [];
+        window.frame3d.queue = [];
       }
+      
+      // Update status
+      const statusEl = document.getElementById('jsStatus');
+      if(statusEl) statusEl.textContent = 'Pronto para uso - Clique em um objeto para adicionar';
 
       function stopPlacing(){
-        window.placingType = null;
+        window.frame3d.placingType = null;
         window.orbitControls.enabled = true;
         document.body.style.cursor = '';
         const top = document.querySelector('.viewport-top div');
-        if(top) top.textContent = 'View: Perspective • Scene: Default';
+        if(top) top.textContent = 'Visualização: Perspectiva • Cena: Padrão';
         const statusEl = document.getElementById('jsStatus');
-        if(statusEl) statusEl.textContent = 'Status: ready (Three.js loaded)';
+        if(statusEl) statusEl.textContent = 'Pronto para uso';
+        
+        // Reset visual feedback
+        const items = document.querySelectorAll('.asset-item');
+        items.forEach(item => item.style.background = '');
       }
 
       function createCubeAt(pos){
@@ -345,13 +376,22 @@
         mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
         raycaster.setFromCamera(mouse, camera);
 
-        if(window.placingType){
+        if(window.frame3d.placingType){
           const pos = new THREE.Vector3();
-          raycaster.ray.intersectPlane(planeY, pos);
-          let obj;
-          if(window.placingType === 'cube') obj = createCubeAt(pos);
-          if(window.placingType === 'sphere') obj = createSphereAt(pos);
-          if(window.placingType === 'plane') obj = createPlaneAt(pos);
+          if(raycaster.ray.intersectPlane(planeY, pos)){
+            let obj;
+            if(window.frame3d.placingType === 'cube') obj = createCubeAt(pos);
+            if(window.frame3d.placingType === 'sphere') obj = createSphereAt(pos);
+            if(window.frame3d.placingType === 'plane') obj = createPlaneAt(pos);
+            
+            if(obj){
+              scene.add(obj);
+              objects.push(obj);
+              selectObject(obj);
+              const statusEl = document.getElementById('jsStatus');
+              if(statusEl) statusEl.textContent = obj.name + ' criado com sucesso';
+              stopPlacing();
+            }
           if(obj){ scene.add(obj); objects.push(obj); selectObject(obj); }
           stopPlacing();
           return;

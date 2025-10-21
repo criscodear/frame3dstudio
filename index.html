@@ -116,9 +116,9 @@
             <div class="tool" title="Adicionar">+</div>
           </div>
           <div class="asset-list">
-            <div class="asset-item"><div style="width:36px;height:36;border-radius:6px;background:linear-gradient(180deg,#22354a,#0f1724);display:flex;align-items:center;justify-content:center">Box</div><div>Cube</div></div>
-            <div class="asset-item"><div style="width:36px;height:36;border-radius:6px;background:linear-gradient(180deg,#254a23,#0f1724);display:flex;align-items:center;justify-content:center">Sp</div><div>Sphere</div></div>
-            <div class="asset-item"><div style="width:36px;height:36;border-radius:6px;background:linear-gradient(180deg,#4a2a23,#0f1724);display:flex;align-items:center;justify-content:center">Pl</div><div>Plane</div></div>
+            <div class="asset-item" data-type="cube" role="button"><div style="width:36px;height:36;border-radius:6px;background:linear-gradient(180deg,#22354a,#0f1724);display:flex;align-items:center;justify-content:center">Box</div><div>Cube</div></div>
+            <div class="asset-item" data-type="sphere" role="button"><div style="width:36px;height:36;border-radius:6px;background:linear-gradient(180deg,#254a23,#0f1724);display:flex;align-items:center;justify-content:center">Sp</div><div>Sphere</div></div>
+            <div class="asset-item" data-type="plane" role="button"><div style="width:36px;height:36;border-radius:6px;background:linear-gradient(180deg,#4a2a23,#0f1724);display:flex;align-items:center;justify-content:center">Pl</div><div>Plane</div></div>
           </div>
           <div style="display:flex;justify-content:center;padding-top:6px"><div class="tool" title="Preview">👁</div></div>
         </div>
@@ -139,9 +139,9 @@
             <h4>Object</h4>
             <div class="panel-row"><label style="width:90px;color:var(--muted)">Type</label><select><option>Mesh</option><option>Light</option><option>Camera</option></select></div>
             <div style="height:8px"></div>
-            <div class="panel-row"><label style="width:90px;color:var(--muted)">Position</label><input value="0, 0, 0"/></div>
-            <div class="panel-row"><label style="width:90px;color:var(--muted)">Rotation</label><input value="0, 0, 0"/></div>
-            <div class="panel-row"><label style="width:90px;color:var(--muted)">Scale</label><input value="1, 1, 1"/></div>
+            <div class="panel-row"><label style="width:90px;color:var(--muted)">Position</label><input id="posInput" value="0, 0, 0"/></div>
+            <div class="panel-row"><label style="width:90px;color:var(--muted)">Rotation</label><input id="rotInput" value="0, 0, 0"/></div>
+            <div class="panel-row"><label style="width:90px;color:var(--muted)">Scale</label><input id="scaleInput" value="1, 1, 1"/></div>
           </div>
           <div class="props-section">
             <h4>Materials</h4>
@@ -168,6 +168,7 @@
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/three@0.158.0/examples/js/controls/OrbitControls.js"></script>
     <script>
+    document.addEventListener('DOMContentLoaded', ()=>{
       // Three.js scene setup
       const canvas = document.getElementById('glcanvas');
       const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
@@ -214,51 +215,26 @@
       requestAnimationFrame(animate);
 
       // helpers to create objects
-      function makeCube(){
-        const geo = new THREE.BoxGeometry(1,1,1);
-        const mat = new THREE.MeshStandardMaterial({color:0x8888ff});
-        const m = new THREE.Mesh(geo, mat);
-        m.name = 'Cube_'+(objects.length+1);
-        scene.add(m);
-        objects.push(m);
-        selectObject(m);
-      }
-
-      function makeSphere(){
-        const geo = new THREE.SphereGeometry(0.6, 32, 24);
-        const mat = new THREE.MeshStandardMaterial({color:0xff8888});
-        const m = new THREE.Mesh(geo, mat);
-        m.name = 'Sphere_'+(objects.length+1);
-        scene.add(m);
-        objects.push(m);
-        selectObject(m);
-      }
-
-      function makePlane(){
-        const geo = new THREE.PlaneGeometry(2,2);
-        const mat = new THREE.MeshStandardMaterial({color:0x88ff88, side:THREE.DoubleSide});
-        const m = new THREE.Mesh(geo, mat);
-        m.rotation.x = -Math.PI/2;
-        m.name = 'Plane_'+(objects.length+1);
-        scene.add(m);
-        objects.push(m);
-        selectObject(m);
-      }
+      function makeCube(){ const m = createCubeAt(new THREE.Vector3()); scene.add(m); objects.push(m); selectObject(m); }
+      function makeSphere(){ const m = createSphereAt(new THREE.Vector3()); scene.add(m); objects.push(m); selectObject(m); }
+      function makePlane(){ const m = createPlaneAt(new THREE.Vector3()); scene.add(m); objects.push(m); selectObject(m); }
 
       // placing / UI hooks: start placing mode when clicking asset buttons
       let placingType = null;
       let isDragging = false;
       const planeY = new THREE.Plane(new THREE.Vector3(0,1,0), 0); // ground plane y=0
       const assetItems = document.querySelectorAll('.asset-item');
-      assetItems[0].addEventListener('click', ()=> startPlacing('cube'));
-      assetItems[1].addEventListener('click', ()=> startPlacing('sphere'));
-      assetItems[2].addEventListener('click', ()=> startPlacing('plane'));
+      assetItems.forEach(it=>{
+        it.addEventListener('click', ()=>{
+          const t = it.getAttribute('data-type');
+          if(!t) return; startPlacing(t);
+        });
+      });
 
       function startPlacing(type){
         placingType = type;
         controls.enabled = false;
         document.body.style.cursor = 'crosshair';
-        // small visual hint
         const top = document.querySelector('.viewport-top div');
         if(top) top.textContent = 'Click on viewport to place: ' + type;
       }
@@ -303,7 +279,6 @@
       function selectObject(obj){
         if(selected && selected.material) selected.material.emissive && (selected.material.emissive.setHex && selected.material.emissive.setHex(0x000000));
         selected = obj;
-        // highlight
         if(selected && selected.material && selected.material.emissive) selected.material.emissive.setHex(0x113355);
         updatePropertyPanel();
       }
@@ -320,7 +295,6 @@
         raycaster.setFromCamera(mouse, camera);
 
         if(placingType){
-          // place on ground plane
           const pos = new THREE.Vector3();
           raycaster.ray.intersectPlane(planeY, pos);
           let obj;
@@ -336,15 +310,8 @@
         if(hits.length){
           const obj = hits[0].object;
           selectObject(obj);
-          // start drag for positioning
-          if(obj === selected){
-            isDragging = true;
-            controls.enabled = false;
-          }
-        } else {
-          // click on empty space -> deselect
-          selectObject(null);
-        }
+          if(obj === selected){ isDragging = true; controls.enabled = false; }
+        } else { selectObject(null); }
       });
 
       renderer.domElement.addEventListener('pointermove', (e)=>{
@@ -361,46 +328,30 @@
         }
       });
 
-      window.addEventListener('pointerup', ()=>{
-        if(isDragging){ isDragging = false; controls.enabled = true; }
-      });
+      window.addEventListener('pointerup', ()=>{ if(isDragging){ isDragging = false; controls.enabled = true; } });
 
-      // property inputs
-      const posInput = document.querySelector('.properties .panel-row input[value="0, 0, 0"]');
-      const scaleInput = document.querySelector('.properties .panel-row input[value="1, 1, 1"]');
+      // property inputs by ID
+      const posInput = document.getElementById('posInput');
+      const scaleInput = document.getElementById('scaleInput');
+      const rotInput = document.getElementById('rotInput');
 
-      function parseVec3(str){
-        return str.split(',').map(s=>parseFloat(s.trim())||0);
-      }
+      function parseVec3(str){ return str.split(',').map(s=>parseFloat(s.trim())||0); }
 
       function updatePropertyPanel(){
         if(!selected) return;
-        // position
-        const p = selected.position;
-        posInput.value = `${p.x.toFixed(2)}, ${p.y.toFixed(2)}, ${p.z.toFixed(2)}`;
-        // scale
-        const s = selected.scale;
-        scaleInput.value = `${s.x.toFixed(2)}, ${s.y.toFixed(2)}, ${s.z.toFixed(2)}`;
+        const p = selected.position; posInput.value = `${p.x.toFixed(2)}, ${p.y.toFixed(2)}, ${p.z.toFixed(2)}`;
+        const s = selected.scale; scaleInput.value = `${s.x.toFixed(2)}, ${s.y.toFixed(2)}, ${s.z.toFixed(2)}`;
+        const r = selected.rotation; rotInput.value = `${(r.x).toFixed(2)}, ${(r.y).toFixed(2)}, ${(r.z).toFixed(2)}`;
       }
 
-      posInput.addEventListener('change', ()=>{
-        if(!selected) return;
-        const [x,y,z] = parseVec3(posInput.value);
-        selected.position.set(x,y,z);
-      });
-
-      scaleInput.addEventListener('change', ()=>{
-        if(!selected) return;
-        const [x,y,z] = parseVec3(scaleInput.value);
-        selected.scale.set(x||1,y||1,z||1);
-      });
+      posInput.addEventListener('change', ()=>{ if(!selected) return; const [x,y,z] = parseVec3(posInput.value); selected.position.set(x,y,z); });
+      scaleInput.addEventListener('change', ()=>{ if(!selected) return; const [x,y,z] = parseVec3(scaleInput.value); selected.scale.set(x||1,y||1,z||1); });
+      rotInput.addEventListener('change', ()=>{ if(!selected) return; const [x,y,z] = parseVec3(rotInput.value); selected.rotation.set(x,y,z); });
 
       // expose for debugging
-      window._scene = scene;
-      window._objects = objects;
-
-      // basic resize on window
+      window._scene = scene; window._objects = objects;
       window.addEventListener('resize', ()=>{ resize(); });
+    });
     </script>
   </body>
 </html>

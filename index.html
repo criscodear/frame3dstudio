@@ -24,23 +24,27 @@
       /* App layout */
       .app-container{
         display:grid;
-        grid-template-rows:56px 1fr 120px;
-        grid-template-columns:220px 1fr 340px;
+        grid-template-columns:240px 1fr 360px;
+        grid-template-rows:56px 1fr 160px;
+        grid-template-areas:
+          "topbar topbar topbar"
+          "sidebar viewport props"
+          "timeline timeline timeline";
         height:100vh;
         gap:12px;
         padding:12px;
         box-sizing:border-box;
       }
-      .topbar{grid-column:1/4; background:linear-gradient(180deg, rgba(0,0,0,0.03), transparent); display:flex; align-items:center; padding:0 12px; border-radius:8px;}
+      .topbar{grid-area: topbar; background:linear-gradient(180deg, rgba(0,0,0,0.03), transparent); display:flex; align-items:center; padding:0 12px; border-radius:8px;}
       .topbar .title{font-weight:600; color:var(--accent);}
-  .toolbar{grid-row:2/3; grid-column:1/2; background:var(--panel); border-radius:8px; display:flex; flex-direction:column; align-items:stretch; padding:12px; gap:12px;}
+  .toolbar{grid-area: sidebar; background:var(--panel); border-radius:8px; display:flex; flex-direction:column; align-items:stretch; padding:12px; gap:12px;}
   .asset-list{flex:1; overflow:auto; display:flex; flex-direction:column; gap:8px}
   .asset-item{display:flex; gap:8px; align-items:center; padding:8px; border-radius:8px; cursor:pointer; color:var(--muted)}
   .asset-item:hover{background:rgba(0,0,0,0.05)}
   .tool-row{display:flex; gap:8px}
   .tool{width:44px; height:44px; background:transparent; border-radius:6px; display:flex; align-items:center; justify-content:center; color:var(--muted); cursor:pointer;}
   .tool.active{background:rgba(14,165,233,0.2); color:var(--accent);} 
-  .viewport-panel{grid-row:2/3; grid-column:2/3; background:linear-gradient(180deg, rgba(0,0,0,0.03), transparent); border-radius:8px; overflow:hidden; display:flex; flex-direction:column;}
+  .viewport-panel{grid-area: viewport; background:linear-gradient(180deg, rgba(0,0,0,0.03), transparent); border-radius:8px; overflow:hidden; display:flex; flex-direction:column;}
   .viewport-top{height:42px; display:flex; align-items:center; justify-content:space-between; padding:6px 12px; gap:8px; color:var(--muted); font-size:13px;}
   .viewport-main{flex:1; display:flex; align-items:center; justify-content:center; background:linear-gradient(180deg,#e2e8f0 0%, #cbd5e1 100%); position:relative;}
       /* grid background */
@@ -57,27 +61,42 @@
       .cube div{position:absolute; width:120px; height:120px; background:linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.7)); border:1px solid rgba(0,0,0,0.1); box-shadow: 0 8px 30px rgba(100,116,139,0.2);}
       .cube .front{transform:translateZ(60px);} .cube .back{transform:rotateY(180deg) translateZ(60px);} .cube .right{transform:rotateY(90deg) translateZ(60px);} .cube .left{transform:rotateY(-90deg) translateZ(60px);} .cube .top{transform:rotateX(90deg) translateZ(60px);} .cube .bottom{transform:rotateX(-90deg) translateZ(60px);}      
       @keyframes spin{from{transform:rotateX(-12deg) rotateY(0);}to{transform:rotateX(-12deg) rotateY(360deg);}}
-  .properties{grid-row:2/3; grid-column:3/4; background:var(--panel); border-radius:8px; padding:12px; box-sizing:border-box; overflow:auto;}
+  .properties{grid-area: props; background:var(--panel); border-radius:8px; padding:12px; box-sizing:border-box; overflow:auto;}
   .props-section{margin-bottom:18px}
       .panel-section{margin-bottom:14px;}
       .panel-section h4{margin:0 0 8px 0; color:var(--muted); font-size:13px}
       .panel-row{display:flex; gap:8px; align-items:center;}
       .panel-row input, .panel-row select{flex:1; padding:6px 8px; border-radius:6px; border:1px solid rgba(0,0,0,0.1); background:rgba(255,255,255,0.5); color:inherit}
-  .timeline{grid-column:1/4; background:linear-gradient(180deg, transparent, rgba(0,0,0,0.03)); border-radius:8px; display:flex; flex-direction:column; padding:8px 12px; box-sizing:border-box; color:var(--muted);}
+  .timeline{grid-area: timeline; background:linear-gradient(180deg, transparent, rgba(0,0,0,0.03)); border-radius:8px; display:flex; flex-direction:column; padding:8px 12px; box-sizing:border-box; color:var(--muted);}
   .timeline-controls{display:flex; align-items:center; gap:8px}
   .timeline-track{height:28px; margin-top:8px; background:rgba(0,0,0,0.05); border-radius:6px; position:relative}
   .play-btn{width:36px;height:36px;border-radius:6px;display:flex;align-items:center;justify-content:center;background:transparent;color:var(--muted);cursor:pointer}
 
       /* responsive */
       @media(max-width:1120px){
-        .app-container{grid-template-columns:160px 1fr; grid-template-rows:56px 1fr 160px;}
-        .properties{grid-column:1/3; grid-row:3/4}
-        .timeline{grid-column:1/3}
+        .app-container{
+          grid-template-columns: 1fr 320px;
+          grid-template-rows: 56px 1fr 220px 200px;
+          grid-template-areas:
+            "topbar topbar"
+            "viewport props"
+            "sidebar sidebar"
+            "timeline timeline";
+        }
+        .toolbar{flex-direction:row; align-items:center;}
       }
       @media(max-width:720px){
-        .app-container{grid-template-columns:1fr; grid-template-rows:56px 1fr 220px;}
-        .toolbar{grid-row:3/4; grid-column:1/2; flex-direction:row}
-        .properties{grid-row:4/5}
+        .app-container{
+          grid-template-columns: 1fr;
+          grid-template-rows: 56px auto auto 220px 200px;
+          grid-template-areas:
+            "topbar"
+            "viewport"
+            "props"
+            "sidebar"
+            "timeline";
+        }
+        .toolbar{flex-direction:row;}
       }
     </style>
   </head>
@@ -123,9 +142,6 @@
           </div>
           <div style="display:flex;justify-content:center;padding-top:6px"><div class="tool" title="Preview">👁</div></div>
         </div>
-
-        </div>
-
         <!-- resilient asset/tool handlers: queue clicks if main script not ready -->
         <script>
           (function(){

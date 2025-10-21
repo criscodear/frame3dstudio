@@ -3,12 +3,143 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>dyad-generated-app</title>
-    <style>body { background-color: #0000FF; }</style>
+    <title>frame3dstudio - Inicial</title>
+    <style>
+      :root{
+        --bg:#0b1220;
+        --panel:#0f1724;
+        --accent:#0ea5e9;
+        --muted:#94a3b8;
+        --panel-contrast:#0b1220;
+      }
+      html,body,#root{height:100%;}
+      body{
+        margin:0;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+        background: var(--bg);
+        color:#e6eef8;
+        -webkit-font-smoothing:antialiased;
+        -moz-osx-font-smoothing:grayscale;
+      }
+      /* App layout */
+      .app-container{
+        display:grid;
+        grid-template-rows:48px 1fr 28px;
+        grid-template-columns:60px 1fr 300px;
+        height:100vh;
+        gap:12px;
+        padding:12px;
+        box-sizing:border-box;
+      }
+      .topbar{grid-column:1/4; background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent); display:flex; align-items:center; padding:0 12px; border-radius:8px;}
+      .topbar .title{font-weight:600; color:var(--accent);}
+      .toolbar{grid-row:2/3; grid-column:1/2; background:var(--panel); border-radius:8px; display:flex; flex-direction:column; align-items:center; padding:8px; gap:10px;}
+      .toolbar .tool{width:36px; height:36px; background:transparent; border-radius:6px; display:flex; align-items:center; justify-content:center; color:var(--muted); cursor:pointer;}
+      .toolbar .tool.active{background:rgba(78,124,255,0.12); color:var(--accent);} 
+      .viewport-panel{grid-row:2/3; grid-column:2/3; background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent); border-radius:8px; overflow:hidden; display:flex; flex-direction:column;}
+      .viewport-top{height:34px; display:flex; align-items:center; padding:6px 12px; gap:8px; color:var(--muted); font-size:13px;}
+      .viewport-main{flex:1; display:flex; align-items:center; justify-content:center; background:linear-gradient(180deg,#071026 0%, #07121a 100%); position:relative;}
+      /* grid background */
+      .viewport-main::before{
+        content:"";
+        position:absolute; inset:0; z-index:0;
+        background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+        background-size: 40px 40px, 40px 40px;
+        opacity:0.7;
+      }
+      /* placeholder 3D cube (CSS) */
+      .cube-wrap{position:relative; width:420px; height:300px; z-index:1; display:flex; align-items:center; justify-content:center;}
+      .cube{width:120px; height:120px; transform-style:preserve-3d; animation:spin 8s linear infinite;}
+      .cube div{position:absolute; width:120px; height:120px; background:linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)); border:1px solid rgba(255,255,255,0.03); box-shadow: 0 8px 30px rgba(2,6,23,0.6);}
+      .cube .front{transform:translateZ(60px);} .cube .back{transform:rotateY(180deg) translateZ(60px);} .cube .right{transform:rotateY(90deg) translateZ(60px);} .cube .left{transform:rotateY(-90deg) translateZ(60px);} .cube .top{transform:rotateX(90deg) translateZ(60px);} .cube .bottom{transform:rotateX(-90deg) translateZ(60px);}      
+      @keyframes spin{from{transform:rotateX(-12deg) rotateY(0);}to{transform:rotateX(-12deg) rotateY(360deg);}}
+      .properties{grid-row:2/3; grid-column:3/4; background:var(--panel); border-radius:8px; padding:12px; box-sizing:border-box; overflow:auto;}
+      .panel-section{margin-bottom:14px;}
+      .panel-section h4{margin:0 0 8px 0; color:var(--muted); font-size:13px}
+      .panel-row{display:flex; gap:8px; align-items:center;}
+      .panel-row input, .panel-row select{flex:1; padding:6px 8px; border-radius:6px; border:1px solid rgba(255,255,255,0.03); background:transparent; color:inherit}
+      .statusbar{grid-column:1/4; background:linear-gradient(180deg, transparent, rgba(255,255,255,0.02)); border-radius:8px; display:flex; align-items:center; padding:0 12px; font-size:13px; color:var(--muted);}
+
+      /* responsive */
+      @media(max-width:920px){
+        .app-container{grid-template-columns:60px 1fr; grid-template-rows:48px 1fr 120px;}
+        .properties{grid-column:1/3; grid-row:3/4}
+        .statusbar{grid-column:1/3}
+      }
+    </style>
   </head>
 
-  <body>teste
-    <div id="root"></div>
+  <body>
+    <div id="root">
+      <div class="app-container">
+        <div class="topbar">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:28px;height:28px;border-radius:6px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;">F</div>
+            <div>
+              <div class="title">Frame3D Studio</div>
+              <div style="font-size:12px;color:var(--muted)">Modelagem • Cena não salva</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <div class="tool active" title="Selecionar">S</div>
+          <div class="tool" title="Mover">M</div>
+          <div class="tool" title="Rotacionar">R</div>
+          <div class="tool" title="Escala">E</div>
+          <div class="tool" title="Adicionar">+</div>
+          <div style="flex:1"></div>
+          <div class="tool" title="Visualizar">👁</div>
+        </div>
+
+        <div class="viewport-panel">
+          <div class="viewport-top">View: Perspective • Scene: Default</div>
+          <div class="viewport-main">
+            <div class="cube-wrap" aria-hidden="true">
+              <div class="cube">
+                <div class="front"></div>
+                <div class="back"></div>
+                <div class="right"></div>
+                <div class="left"></div>
+                <div class="top"></div>
+                <div class="bottom"></div>
+              </div>
+            </div>
+            <!-- future: actual WebGL/Three.js canvas goes here -->
+          </div>
+        </div>
+
+        <div class="properties">
+          <div class="panel-section">
+            <h4>Scene</h4>
+            <div class="panel-row"><label style="width:80px;color:var(--muted)">Name</label><input value="Default Scene"/></div>
+          </div>
+          <div class="panel-section">
+            <h4>Object</h4>
+            <div class="panel-row"><label style="width:80px;color:var(--muted)">Type</label><select><option>Mesh</option><option>Light</option><option>Camera</option></select></div>
+            <div style="height:8px"></div>
+            <div class="panel-row"><label style="width:80px;color:var(--muted)">Position</label><input value="0, 0, 0"/></div>
+            <div class="panel-row"><label style="width:80px;color:var(--muted)">Rotation</label><input value="0, 0, 0"/></div>
+            <div class="panel-row"><label style="width:80px;color:var(--muted)">Scale</label><input value="1, 1, 1"/></div>
+          </div>
+          <div class="panel-section">
+            <h4>Materials</h4>
+            <div class="panel-row"><label style="width:80px;color:var(--muted)">Base</label><input value="#808080"/></div>
+          </div>
+        </div>
+
+        <div class="statusbar">Ready • 0 objects • FPS: 60</div>
+      </div>
+    </div>
+
+    <script>
+      // Placeholder script: make cube spin faster on hover
+      const cube = document.querySelector('.cube');
+      if(cube){
+        document.querySelector('.viewport-main').addEventListener('mouseenter', ()=>{cube.style.animationDuration='3s'});
+        document.querySelector('.viewport-main').addEventListener('mouseleave', ()=>{cube.style.animationDuration='8s'});
+      }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -288,7 +288,7 @@
 
       function animate(){
         resize();
-        controls.update();
+        window.orbitControls.update();
         renderer.render(scene, camera);
         requestAnimationFrame(animate);
       }
@@ -390,9 +390,8 @@
               selectObject(obj);
               const statusEl = document.getElementById('jsStatus');
               if(statusEl) statusEl.textContent = obj.name + ' criado com sucesso';
-              stopPlacing();
             }
-          if(obj){ scene.add(obj); objects.push(obj); selectObject(obj); }
+          }
           stopPlacing();
           return;
         }
@@ -401,7 +400,7 @@
         if(hits.length){
           const obj = hits[0].object;
           selectObject(obj);
-          if(obj === selected){ isDragging = true; controls.enabled = false; }
+          if(obj === selected){ isDragging = true; window.orbitControls.enabled = false; }
         } else { selectObject(null); }
       });
 
@@ -419,7 +418,7 @@
         }
       });
 
-      window.addEventListener('pointerup', ()=>{ if(isDragging){ isDragging = false; controls.enabled = true; } });
+      window.addEventListener('pointerup', ()=>{ if(isDragging){ isDragging = false; window.orbitControls.enabled = true; } });
 
       // property inputs by ID
       const posInput = document.getElementById('posInput');

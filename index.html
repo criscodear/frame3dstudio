@@ -207,6 +207,22 @@
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/three@0.158.0/examples/js/controls/OrbitControls.js"></script>
     <script>
+    // Global state & functions
+    window.placingType = null;
+    window.startPlacing = function(type){
+      const statusEl = document.getElementById('jsStatus');
+      if(!window.THREE){
+        if(statusEl) statusEl.textContent = 'Error: Three.js not loaded';
+        return;
+      }
+      window.placingType = type;
+      if(window.orbitControls) window.orbitControls.enabled = false;
+      document.body.style.cursor = 'crosshair';
+      const top = document.querySelector('.viewport-top div');
+      if(top) top.textContent = 'Click on viewport to place: ' + type;
+      if(statusEl) statusEl.textContent = 'Ready to place: ' + type;
+    };
+    
     document.addEventListener('DOMContentLoaded', ()=>{
       const statusEl = document.getElementById('jsStatus');
       try{
@@ -221,8 +237,8 @@
       const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 1000);
       camera.position.set(3, 3, 6);
 
-      const controls = new THREE.OrbitControls(camera, renderer.domElement);
-      controls.enableDamping = true;
+      window.orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
+      window.orbitControls.enableDamping = true;
 
       const ambient = new THREE.HemisphereLight(0xffffff, 0x444444, 0.6);
       scene.add(ambient);
@@ -257,36 +273,29 @@
       requestAnimationFrame(animate);
 
       // helpers to create objects
-      function makeCube(){ const m = createCubeAt(new THREE.Vector3()); scene.add(m); objects.push(m); selectObject(m); }
-      function makeSphere(){ const m = createSphereAt(new THREE.Vector3()); scene.add(m); objects.push(m); selectObject(m); }
-      function makePlane(){ const m = createPlaneAt(new THREE.Vector3()); scene.add(m); objects.push(m); selectObject(m); }
+      window.makeCube = function(){ const m = createCubeAt(new THREE.Vector3()); scene.add(m); objects.push(m); selectObject(m); }
+      window.makeSphere = function(){ const m = createSphereAt(new THREE.Vector3()); scene.add(m); objects.push(m); selectObject(m); }
+      window.makePlane = function(){ const m = createPlaneAt(new THREE.Vector3()); scene.add(m); objects.push(m); selectObject(m); }
 
-      // placing / UI hooks: start placing mode when clicking asset buttons
-      let placingType = null;
       let isDragging = false;
       const planeY = new THREE.Plane(new THREE.Vector3(0,1,0), 0); // ground plane y=0
-      const assetItems = document.querySelectorAll('.asset-item');
-      assetItems.forEach(it=>{
-        it.addEventListener('click', ()=>{
-          const t = it.getAttribute('data-type');
-          if(!t) return; startPlacing(t);
-        });
-      });
 
-      function startPlacing(type){
-        placingType = type;
-        controls.enabled = false;
-        document.body.style.cursor = 'crosshair';
-        const top = document.querySelector('.viewport-top div');
-        if(top) top.textContent = 'Click on viewport to place: ' + type;
+      // Now handle any clicks queued before initialization
+      if(window.__assetQueue && window.__assetQueue.length){
+        window.__assetQueue.forEach(type => {
+          if(window.startPlacing) window.startPlacing(type);
+        });
+        window.__assetQueue = [];
       }
 
       function stopPlacing(){
-        placingType = null;
-        controls.enabled = true;
+        window.placingType = null;
+        window.orbitControls.enabled = true;
         document.body.style.cursor = '';
         const top = document.querySelector('.viewport-top div');
         if(top) top.textContent = 'View: Perspective • Scene: Default';
+        const statusEl = document.getElementById('jsStatus');
+        if(statusEl) statusEl.textContent = 'Status: ready (Three.js loaded)';
       }
 
       function createCubeAt(pos){
@@ -336,13 +345,13 @@
         mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
         raycaster.setFromCamera(mouse, camera);
 
-        if(placingType){
+        if(window.placingType){
           const pos = new THREE.Vector3();
           raycaster.ray.intersectPlane(planeY, pos);
           let obj;
-          if(placingType === 'cube') obj = createCubeAt(pos);
-          if(placingType === 'sphere') obj = createSphereAt(pos);
-          if(placingType === 'plane') obj = createPlaneAt(pos);
+          if(window.placingType === 'cube') obj = createCubeAt(pos);
+          if(window.placingType === 'sphere') obj = createSphereAt(pos);
+          if(window.placingType === 'plane') obj = createPlaneAt(pos);
           if(obj){ scene.add(obj); objects.push(obj); selectObject(obj); }
           stopPlacing();
           return;

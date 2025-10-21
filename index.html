@@ -105,6 +105,7 @@
               <div class="tool" title="Redo">⤻</div>
             </div>
           </div>
+          <div style="margin-left:16px;color:var(--muted);font-size:13px" id="jsStatus">Status: ready</div>
         </div>
 
         <div class="toolbar">
@@ -122,6 +123,44 @@
           </div>
           <div style="display:flex;justify-content:center;padding-top:6px"><div class="tool" title="Preview">👁</div></div>
         </div>
+
+        </div>
+
+        <!-- resilient asset/tool handlers: queue clicks if main script not ready -->
+        <script>
+          (function(){
+            // ensure global handlers exist to accept clicks immediately
+            if(!window._assetClick){
+              window.__assetQueue = window.__assetQueue || [];
+              window._assetClick = function(type){
+                // if startPlacing is available, call it; otherwise queue
+                if(window.startPlacing && typeof window.startPlacing === 'function'){
+                  try{ window.startPlacing(type); return; }catch(e){ console.error(e); }
+                }
+                window.__assetQueue.push(type);
+                const s = document.getElementById('jsStatus'); if(s) s.textContent = 'Queued: '+type;
+              };
+            }
+
+            if(!window._toolClick){
+              window._toolClick = function(name){ const s = document.getElementById('jsStatus'); if(s) s.textContent = 'Tool: '+name; };
+            }
+
+            const assetEls = document.querySelectorAll('.asset-item');
+            assetEls.forEach(it=>{
+              it.addEventListener('click', ()=>{
+                const type = it.getAttribute('data-type')||it.textContent.trim();
+                try{ window._assetClick(type); }catch(e){ console.error(e); alert('Asset: '+type); }
+              });
+            });
+
+            const tools = document.querySelectorAll('.tool');
+            tools.forEach(t=> t.addEventListener('click', ()=>{
+              const name = t.getAttribute('title')||t.textContent.trim();
+              try{ window._toolClick(name); }catch(e){ console.error(e); }
+            }));
+          })();
+        </script>
 
         <div class="viewport-panel">
           <div class="viewport-top"><div>View: Perspective • Scene: Default</div><div style="font-size:13px;color:var(--muted)">Camera: Main</div></div>
@@ -169,6 +208,9 @@
     <script src="https://unpkg.com/three@0.158.0/examples/js/controls/OrbitControls.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', ()=>{
+      const statusEl = document.getElementById('jsStatus');
+      try{
+      if(typeof THREE === 'undefined') throw new Error('Three.js not loaded');
       // Three.js scene setup
       const canvas = document.getElementById('glcanvas');
       const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
@@ -351,6 +393,15 @@
       // expose for debugging
       window._scene = scene; window._objects = objects;
       window.addEventListener('resize', ()=>{ resize(); });
+      if(statusEl) statusEl.textContent = 'Status: ready (Three.js loaded)';
+      }catch(err){
+        console.error('Initialization error:', err);
+        if(statusEl) statusEl.textContent = 'Status: error - ' + err.message;
+        // fallback: make asset buttons show alerts so user sees they work
+        document.querySelectorAll('.asset-item').forEach(it=>{
+          it.addEventListener('click', ()=>{ alert('Asset clicked: '+(it.getAttribute('data-type')||'unknown')); });
+        });
+      }
     });
     </script>
   </body>

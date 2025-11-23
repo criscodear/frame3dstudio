@@ -1,14 +1,17 @@
-import { MadeWithDyad } from "@/components/made-with-dyad";
-import CenteredButton from "@/components/CenteredButton";
-
 const Index = () => {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background">
-      <div className="flex-grow flex items-center justify-center w-full">
-        <CenteredButton />
-      </div>
-      <MadeWithDyad />
-    </div>
+    <iframe
+      src="/frame3d.html"
+      style={{
+        width: '100vw',
+        height: '100vh',
+        border: 'none',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+      }}
+      title="Frame3D Studio"
+    />
   );
 };
 

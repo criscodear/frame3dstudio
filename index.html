@@ -1,498 +1,1777 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frame3dstudio - Inicial</title>
-    <style>
-      :root{
-        --bg:#f0f4f8;
-        --panel:#ffffff;
-        --accent:#0ea5e9;
-        --muted:#64748b;
-        --panel-contrast:#e2e8f0;
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Frame3D Studio - Imagem para 3D</title>
+  <style>
+    :root {
+      --bg-primary: #0f0f1a;
+      --bg-secondary: #1a1a2e;
+      --bg-tertiary: #252542;
+      --accent: #6366f1;
+      --accent-hover: #818cf8;
+      --accent-glow: rgba(99, 102, 241, 0.3);
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --border: #334155;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --error: #ef4444;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      overflow: hidden;
+    }
+
+    /* Main Layout */
+    .app {
+      display: grid;
+      grid-template-rows: 60px 1fr;
+      grid-template-columns: 320px 1fr 300px;
+      grid-template-areas:
+        "header header header"
+        "sidebar viewport properties";
+      height: 100vh;
+      gap: 1px;
+      background: var(--border);
+    }
+
+    /* Header */
+    .header {
+      grid-area: header;
+      background: var(--bg-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--accent), #a855f7);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    .logo-text h1 {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .logo-text span {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--border);
+    }
+
+    /* Sidebar */
+    .sidebar {
+      grid-area: sidebar;
+      background: var(--bg-secondary);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sidebar-section {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-section h3 {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 15px;
+    }
+
+    /* Upload Area */
+    .upload-area {
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 30px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      background: var(--bg-tertiary);
+    }
+
+    .upload-area:hover, .upload-area.drag-over {
+      border-color: var(--accent);
+      background: rgba(99, 102, 241, 0.1);
+    }
+
+    .upload-icon {
+      font-size: 48px;
+      margin-bottom: 15px;
+      opacity: 0.7;
+    }
+
+    .upload-area h4 {
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .upload-area p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    #imageInput {
+      display: none;
+    }
+
+    /* Image Preview */
+    .image-preview {
+      display: none;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .image-preview.active {
+      display: flex;
+    }
+
+    .preview-container {
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--bg-tertiary);
+    }
+
+    .preview-container img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .preview-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .preview-actions .btn {
+      flex: 1;
+      justify-content: center;
+    }
+
+    /* Conversion Settings */
+    .settings-group {
+      margin-bottom: 20px;
+    }
+
+    .settings-group label {
+      display: block;
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .settings-group input[type="range"] {
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--bg-tertiary);
+      appearance: none;
+      cursor: pointer;
+    }
+
+    .settings-group input[type="range"]::-webkit-slider-thumb {
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+    }
+
+    .settings-group select {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .range-value {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 5px;
+    }
+
+    /* Objects List */
+    .objects-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 20px;
+    }
+
+    .object-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 8px;
+      background: var(--bg-tertiary);
+    }
+
+    .object-item:hover, .object-item.selected {
+      background: rgba(99, 102, 241, 0.2);
+      border: 1px solid var(--accent);
+      margin: -1px;
+      margin-bottom: 7px;
+    }
+
+    .object-thumb {
+      width: 40px;
+      height: 40px;
+      border-radius: 6px;
+      background: var(--bg-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .object-info h4 {
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .object-info span {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Viewport */
+    .viewport {
+      grid-area: viewport;
+      background: var(--bg-primary);
+      position: relative;
+      overflow: hidden;
+    }
+
+    #canvas3d {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .viewport-controls {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      background: var(--bg-secondary);
+      padding: 10px 15px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .view-btn {
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: 8px;
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 18px;
+    }
+
+    .view-btn:hover, .view-btn.active {
+      background: var(--accent);
+      color: white;
+    }
+
+    .loading-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 15, 26, 0.9);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 20px;
+      z-index: 100;
+    }
+
+    .loading-overlay.active {
+      display: flex;
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid var(--bg-tertiary);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    /* Properties Panel */
+    .properties {
+      grid-area: properties;
+      background: var(--bg-secondary);
+      overflow-y: auto;
+    }
+
+    .properties-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .properties-header h2 {
+      font-size: 16px;
+      margin-bottom: 5px;
+    }
+
+    .properties-header span {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .property-group {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .property-group h4 {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 15px;
+    }
+
+    .property-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .property-row label {
+      width: 80px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .property-row input {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      font-size: 13px;
+    }
+
+    .property-row input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .xyz-inputs {
+      display: flex;
+      gap: 8px;
+      flex: 1;
+    }
+
+    .xyz-inputs input {
+      width: 100%;
+      text-align: center;
+    }
+
+    .xyz-inputs span {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: center;
+      display: block;
+      margin-top: 4px;
+    }
+
+    .color-picker {
+      width: 40px;
+      height: 32px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    /* Export Options */
+    .export-options {
+      padding: 20px;
+    }
+
+    .export-options h4 {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 15px;
+    }
+
+    .export-btn {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+
+    /* Status Bar */
+    .status-bar {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: var(--bg-secondary);
+      padding: 10px 15px;
+      border-radius: 8px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+
+    .status-bar.success {
+      border-color: var(--success);
+      color: var(--success);
+    }
+
+    .status-bar.error {
+      border-color: var(--error);
+      color: var(--error);
+    }
+
+    /* Empty State */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      text-align: center;
+      padding: 40px;
+    }
+
+    .empty-state-icon {
+      font-size: 80px;
+      margin-bottom: 20px;
+      opacity: 0.3;
+    }
+
+    .empty-state h3 {
+      font-size: 20px;
+      margin-bottom: 10px;
+      color: var(--text-secondary);
+    }
+
+    .empty-state p {
+      font-size: 14px;
+      color: var(--text-muted);
+      max-width: 300px;
+    }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+      .app {
+        grid-template-columns: 280px 1fr 280px;
       }
-  html,body,#root{height:100%;}
-      body{
-        margin:0;
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-        background: var(--bg);
-        color:#1e293b;
-        -webkit-font-smoothing:antialiased;
-        -moz-osx-font-smoothing:grayscale;
-      }
-      /* App layout */
-      .app-container{
-        display:grid;
-        grid-template-columns:240px 1fr 360px;
-        grid-template-rows:56px 1fr 160px;
+    }
+
+    @media (max-width: 900px) {
+      .app {
+        grid-template-columns: 1fr;
+        grid-template-rows: 60px auto 1fr auto;
         grid-template-areas:
-          "topbar topbar topbar"
-          "sidebar viewport props"
-          "timeline timeline timeline";
-        height:100vh;
-        gap:12px;
-        padding:12px;
-        box-sizing:border-box;
+          "header"
+          "sidebar"
+          "viewport"
+          "properties";
       }
-      .topbar{grid-area: topbar; background:linear-gradient(180deg, rgba(0,0,0,0.03), transparent); display:flex; align-items:center; padding:0 12px; border-radius:8px;}
-      .topbar .title{font-weight:600; color:var(--accent);}
-  .toolbar{grid-area: sidebar; background:var(--panel); border-radius:8px; display:flex; flex-direction:column; align-items:stretch; padding:12px; gap:12px;}
-  .asset-list{flex:1; overflow:auto; display:flex; flex-direction:column; gap:8px}
-  .asset-item{display:flex; gap:8px; align-items:center; padding:8px; border-radius:8px; cursor:pointer; color:var(--muted)}
-  .asset-item:hover{background:rgba(0,0,0,0.05)}
-  .tool-row{display:flex; gap:8px}
-  .tool{width:44px; height:44px; background:transparent; border-radius:6px; display:flex; align-items:center; justify-content:center; color:var(--muted); cursor:pointer;}
-  .tool.active{background:rgba(14,165,233,0.2); color:var(--accent);} 
-  .viewport-panel{grid-area: viewport; background:linear-gradient(180deg, rgba(0,0,0,0.03), transparent); border-radius:8px; overflow:hidden; display:flex; flex-direction:column;}
-  .viewport-top{height:42px; display:flex; align-items:center; justify-content:space-between; padding:6px 12px; gap:8px; color:var(--muted); font-size:13px;}
-  .viewport-main{flex:1; display:flex; align-items:center; justify-content:center; background:linear-gradient(180deg,#e2e8f0 0%, #cbd5e1 100%); position:relative;}
-      /* grid background */
-      .viewport-main::before{
-        content:"";
-        position:absolute; inset:0; z-index:0;
-        background-image: linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px);
-        background-size: 40px 40px, 40px 40px;
-        opacity:0.7;
+
+      .sidebar, .properties {
+        max-height: 300px;
       }
-      /* placeholder 3D cube (CSS) */
-  .cube-wrap{position:relative; width:640px; height:420px; z-index:1; display:flex; align-items:center; justify-content:center;}
-      .cube{width:120px; height:120px; transform-style:preserve-3d; animation:spin 8s linear infinite;}
-      .cube div{position:absolute; width:120px; height:120px; background:linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.7)); border:1px solid rgba(0,0,0,0.1); box-shadow: 0 8px 30px rgba(100,116,139,0.2);}
-      .cube .front{transform:translateZ(60px);} .cube .back{transform:rotateY(180deg) translateZ(60px);} .cube .right{transform:rotateY(90deg) translateZ(60px);} .cube .left{transform:rotateY(-90deg) translateZ(60px);} .cube .top{transform:rotateX(90deg) translateZ(60px);} .cube .bottom{transform:rotateX(-90deg) translateZ(60px);}      
-      @keyframes spin{from{transform:rotateX(-12deg) rotateY(0);}to{transform:rotateX(-12deg) rotateY(360deg);}}
-  .properties{grid-area: props; background:var(--panel); border-radius:8px; padding:12px; box-sizing:border-box; overflow:auto;}
-  .props-section{margin-bottom:18px}
-      .panel-section{margin-bottom:14px;}
-      .panel-section h4{margin:0 0 8px 0; color:var(--muted); font-size:13px}
-      .panel-row{display:flex; gap:8px; align-items:center;}
-      .panel-row input, .panel-row select{flex:1; padding:6px 8px; border-radius:6px; border:1px solid rgba(0,0,0,0.1); background:rgba(255,255,255,0.5); color:inherit}
-  .timeline{grid-area: timeline; background:linear-gradient(180deg, transparent, rgba(0,0,0,0.03)); border-radius:8px; display:flex; flex-direction:column; padding:8px 12px; box-sizing:border-box; color:var(--muted);}
-  .timeline-controls{display:flex; align-items:center; gap:8px}
-  .timeline-track{height:28px; margin-top:8px; background:rgba(0,0,0,0.05); border-radius:6px; position:relative}
-  .play-btn{width:36px;height:36px;border-radius:6px;display:flex;align-items:center;justify-content:center;background:transparent;color:var(--muted);cursor:pointer}
-
-      /* responsive */
-      @media(max-width:1120px){
-        .app-container{
-          grid-template-columns: 1fr 320px;
-          grid-template-rows: 56px 1fr 220px 200px;
-          grid-template-areas:
-            "topbar topbar"
-            "viewport props"
-            "sidebar sidebar"
-            "timeline timeline";
-        }
-        .toolbar{flex-direction:row; align-items:center;}
-      }
-      @media(max-width:720px){
-        .app-container{
-          grid-template-columns: 1fr;
-          grid-template-rows: 56px auto auto 220px 200px;
-          grid-template-areas:
-            "topbar"
-            "viewport"
-            "props"
-            "sidebar"
-            "timeline";
-        }
-        .toolbar{flex-direction:row;}
-      }
-    </style>
-  </head>
-
-  <body>
-    <div id="root">
-      <div class="app-container">
-        <div class="topbar">
-          <div style="display:flex;align-items:center;gap:12px;">
-            <div style="width:34px;height:34px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;">F</div>
-            <div>
-              <div class="title">Frame3D Studio</div>
-              <div style="font-size:12px;color:var(--muted)">Modelagem • Cena não salva</div>
-            </div>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <div class="tool-row">
-              <div class="tool" title="New">New</div>
-              <div class="tool" title="Open">Open</div>
-              <div class="tool" title="Save">Save</div>
-            </div>
-            <div style="width:16px"></div>
-            <div class="tool-row">
-              <div class="tool" title="Undo">⤺</div>
-              <div class="tool" title="Redo">⤻</div>
-            </div>
-            <div style="width:16px"></div>
-            <div class="tool-row">
-              <div class="tool" id="btnAddCube" title="Adicionar Cubo">Add Cube</div>
-            </div>
-          </div>
-          <div style="margin-left:16px;color:var(--muted);font-size:13px" id="jsStatus">Status: ready</div>
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        <div class="logo-icon">F3</div>
+        <div class="logo-text">
+          <h1>Frame3D Studio</h1>
+          <span>Imagem para Objeto 3D</span>
         </div>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-secondary" id="btnNewProject">
+          <span>+</span> Novo Projeto
+        </button>
+        <button class="btn btn-primary" id="btnExportAll">
+          <span>&#8681;</span> Exportar
+        </button>
+      </div>
+    </header>
 
-        <div class="toolbar">
-          <div style="display:flex;gap:8px;align-items:center">
-            <div class="tool active" title="Selecionar">S</div>
-            <div class="tool" title="Mover">M</div>
-            <div class="tool" title="Rotacionar">R</div>
-            <div class="tool" title="Escala">E</div>
-            <div class="tool" title="Adicionar">+</div>
-          </div>
-          <div class="asset-list">
-            <div class="asset-item" data-type="cube" role="button"><div style="width:36px;height:36;border-radius:6px;background:linear-gradient(180deg,#bfdbfe,#93c5fd);display:flex;align-items:center;justify-content:center">Box</div><div>Cube</div></div>
-            <div class="asset-item" data-type="sphere" role="button"><div style="width:36px;height:36;border-radius:6px;background:linear-gradient(180deg,#bbf7d0,#86efac);display:flex;align-items:center;justify-content:center">Sp</div><div>Sphere</div></div>
-            <div class="asset-item" data-type="plane" role="button"><div style="width:36px;height:36;border-radius:6px;background:linear-gradient(180deg,#fed7aa,#fdba74);display:flex;align-items:center;justify-content:center">Pl</div><div>Plane</div></div>
-          </div>
-          <div style="display:flex;justify-content:center;padding-top:6px"><div class="tool" title="Preview">👁</div></div>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <h3>Upload de Imagem</h3>
+        <div class="upload-area" id="uploadArea">
+          <div class="upload-icon">&#128247;</div>
+          <h4>Arraste uma imagem aqui</h4>
+          <p>ou clique para selecionar (PNG, JPG, WebP)</p>
         </div>
-        <!-- resilient asset/tool handlers: queue clicks if main script not ready -->
-        <script>
-          (function(){
-            // Global state for asset placement
-            window.frame3d = {
-              placingType: null,
-              ready: false,
-              queue: []
-            };
+        <input type="file" id="imageInput" accept="image/*" />
 
-            // Global click handler for assets
-            window._assetClick = function(type){
-              if(window.frame3d.ready){
-                try{ 
-                  window.startPlacing(type);
-                  const s = document.getElementById('jsStatus');
-                  if(s) s.textContent = 'Selecionado: ' + type + ' - Clique no cenário para posicionar';
-                  return;
-                }catch(e){ 
-                  console.error('Erro ao iniciar posicionamento:', e); 
-                }
-              }
-              window.frame3d.queue.push(type);
-              const s = document.getElementById('jsStatus');
-              if(s) s.textContent = 'Na fila: ' + type;
-            };
-
-            if(!window._toolClick){
-              window._toolClick = function(name){ const s = document.getElementById('jsStatus'); if(s) s.textContent = 'Tool: '+name; };
-            }
-
-            const assetEls = document.querySelectorAll('.asset-item');
-            assetEls.forEach(it=>{
-              it.addEventListener('click', ()=>{
-                const type = it.getAttribute('data-type')||it.textContent.trim();
-                try{ window._assetClick(type); }catch(e){ console.error(e); alert('Asset: '+type); }
-              });
-            });
-
-            const tools = document.querySelectorAll('.tool');
-            tools.forEach(t=> t.addEventListener('click', ()=>{
-              const name = t.getAttribute('title')||t.textContent.trim();
-              try{ window._toolClick(name); }catch(e){ console.error(e); }
-            }));
-
-            // Add Cube topbar button handler
-            const addCubeBtn = document.getElementById('btnAddCube');
-            if(addCubeBtn){
-              addCubeBtn.addEventListener('click', ()=>{
-                try{
-                  if(window.frame3d?.ready && typeof window.makeCube === 'function'){
-                    window.makeCube();
-                    const s = document.getElementById('jsStatus');
-                    if(s) s.textContent = 'Cube criado (Add Cube)';
-                  } else {
-                    window.frame3d.queue.push('__addCube__');
-                    const s = document.getElementById('jsStatus');
-                    if(s) s.textContent = 'Na fila: criar Cube';
-                  }
-                }catch(e){ console.error(e); }
-              });
-            }
-          })();
-        </script>
-
-        <div class="viewport-panel">
-          <div class="viewport-top"><div>View: Perspective • Scene: Default</div><div style="font-size:13px;color:var(--muted)">Camera: Main</div></div>
-          <div class="viewport-main">
-            <canvas id="glcanvas" style="width:100%;height:100%;display:block;position:relative;z-index:1"></canvas>
+        <div class="image-preview" id="imagePreview">
+          <div class="preview-container">
+            <img id="previewImage" src="" alt="Preview" />
           </div>
-        </div>
-
-        <div class="properties">
-          <div class="props-section">
-            <h4>Scene</h4>
-            <div class="panel-row"><label style="width:90px;color:var(--muted)">Name</label><input value="Default Scene"/></div>
-          </div>
-          <div class="props-section">
-            <h4>Object</h4>
-            <div class="panel-row"><label style="width:90px;color:var(--muted)">Type</label><select><option>Mesh</option><option>Light</option><option>Camera</option></select></div>
-            <div style="height:8px"></div>
-            <div class="panel-row"><label style="width:90px;color:var(--muted)">Position</label><input id="posInput" value="0, 0, 0"/></div>
-            <div class="panel-row"><label style="width:90px;color:var(--muted)">Rotation</label><input id="rotInput" value="0, 0, 0"/></div>
-            <div class="panel-row"><label style="width:90px;color:var(--muted)">Scale</label><input id="scaleInput" value="1, 1, 1"/></div>
-          </div>
-          <div class="props-section">
-            <h4>Materials</h4>
-            <div class="panel-row"><label style="width:90px;color:var(--muted)">Base</label><input value="#808080"/></div>
-          </div>
-        </div>
-
-        <div class="timeline">
-          <div class="timeline-controls">
-            <div style="display:flex;align-items:center;gap:8px">
-              <button class="play-btn" id="play">▶</button>
-              <div style="font-size:13px">Frame: <span id="frame">0</span> / <span id="max">600</span></div>
-            </div>
-            <div style="flex:1"></div>
-            <div style="font-size:13px;color:var(--muted)">Timeline • 24 FPS</div>
-          </div>
-          <div class="timeline-track" id="timeline-track">
-            <div style="position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--accent);" id="scrubber"></div>
+          <div class="preview-actions">
+            <button class="btn btn-secondary" id="btnChangeImage">Trocar</button>
+            <button class="btn btn-primary" id="btnConvert">Converter para 3D</button>
           </div>
         </div>
       </div>
-    </div>
 
-    <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
-    <script src="https://unpkg.com/three@0.158.0/examples/js/controls/OrbitControls.js"></script>
-    <script>
-    // Global state & functions
-    window.startPlacing = function(type){
-      const statusEl = document.getElementById('jsStatus');
-      if(!window.THREE){
-        if(statusEl) statusEl.textContent = 'Erro: Three.js não carregado';
-        return;
+      <div class="sidebar-section">
+        <h3>Configuracoes de Conversao</h3>
+
+        <div class="settings-group">
+          <label>Metodo de Conversao</label>
+          <select id="conversionMethod">
+            <option value="displacement">Displacement Map</option>
+            <option value="extrusion">Extrusao de Silhueta</option>
+            <option value="pointcloud">Point Cloud</option>
+            <option value="heightmap">Height Map</option>
+          </select>
+        </div>
+
+        <div class="settings-group">
+          <label>Resolucao da Malha</label>
+          <input type="range" id="meshResolution" min="16" max="256" value="64" />
+          <div class="range-value">
+            <span>Baixa (16)</span>
+            <span id="resolutionValue">64</span>
+            <span>Alta (256)</span>
+          </div>
+        </div>
+
+        <div class="settings-group">
+          <label>Profundidade / Altura</label>
+          <input type="range" id="depthScale" min="0.1" max="3" step="0.1" value="1" />
+          <div class="range-value">
+            <span>0.1</span>
+            <span id="depthValue">1.0</span>
+            <span>3.0</span>
+          </div>
+        </div>
+
+        <div class="settings-group">
+          <label>Suavizacao</label>
+          <input type="range" id="smoothing" min="0" max="10" value="2" />
+          <div class="range-value">
+            <span>Nenhuma</span>
+            <span id="smoothValue">2</span>
+            <span>Maxima</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="objects-list" id="objectsList">
+        <h3 style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 15px; padding: 0 10px;">Objetos na Cena</h3>
+        <!-- Objects will be added here dynamically -->
+      </div>
+    </aside>
+
+    <!-- Viewport -->
+    <main class="viewport">
+      <canvas id="canvas3d"></canvas>
+
+      <div class="status-bar" id="statusBar">Pronto para uso</div>
+
+      <div class="viewport-controls">
+        <button class="view-btn active" id="btnRotate" title="Rotacionar">&#8635;</button>
+        <button class="view-btn" id="btnPan" title="Mover">&#9995;</button>
+        <button class="view-btn" id="btnZoom" title="Zoom">&#128269;</button>
+        <button class="view-btn" id="btnReset" title="Resetar Camera">&#8634;</button>
+        <button class="view-btn" id="btnWireframe" title="Wireframe">&#9724;</button>
+        <button class="view-btn" id="btnTexture" title="Textura">&#127912;</button>
+      </div>
+
+      <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text" id="loadingText">Processando imagem...</div>
+      </div>
+
+      <div class="empty-state" id="emptyState">
+        <div class="empty-state-icon">&#127912;</div>
+        <h3>Nenhum objeto 3D</h3>
+        <p>Faca upload de uma imagem para criar seu primeiro objeto 3D</p>
+      </div>
+    </main>
+
+    <!-- Properties Panel -->
+    <aside class="properties">
+      <div class="properties-header">
+        <h2 id="selectedObjectName">Nenhum objeto selecionado</h2>
+        <span id="selectedObjectInfo">Selecione um objeto para editar</span>
+      </div>
+
+      <div class="property-group">
+        <h4>Transformacao</h4>
+
+        <div class="property-row">
+          <label>Posicao</label>
+          <div class="xyz-inputs">
+            <div>
+              <input type="number" id="posX" value="0" step="0.1" />
+              <span>X</span>
+            </div>
+            <div>
+              <input type="number" id="posY" value="0" step="0.1" />
+              <span>Y</span>
+            </div>
+            <div>
+              <input type="number" id="posZ" value="0" step="0.1" />
+              <span>Z</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="property-row">
+          <label>Rotacao</label>
+          <div class="xyz-inputs">
+            <div>
+              <input type="number" id="rotX" value="0" step="1" />
+              <span>X</span>
+            </div>
+            <div>
+              <input type="number" id="rotY" value="0" step="1" />
+              <span>Y</span>
+            </div>
+            <div>
+              <input type="number" id="rotZ" value="0" step="1" />
+              <span>Z</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="property-row">
+          <label>Escala</label>
+          <div class="xyz-inputs">
+            <div>
+              <input type="number" id="scaleX" value="1" step="0.1" min="0.1" />
+              <span>X</span>
+            </div>
+            <div>
+              <input type="number" id="scaleY" value="1" step="0.1" min="0.1" />
+              <span>Y</span>
+            </div>
+            <div>
+              <input type="number" id="scaleZ" value="1" step="0.1" min="0.1" />
+              <span>Z</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="property-group">
+        <h4>Material</h4>
+
+        <div class="property-row">
+          <label>Cor</label>
+          <input type="color" class="color-picker" id="materialColor" value="#6366f1" />
+        </div>
+
+        <div class="property-row">
+          <label>Metalico</label>
+          <input type="range" id="materialMetalness" min="0" max="1" step="0.1" value="0" style="flex:1" />
+        </div>
+
+        <div class="property-row">
+          <label>Rugosidade</label>
+          <input type="range" id="materialRoughness" min="0" max="1" step="0.1" value="0.5" style="flex:1" />
+        </div>
+
+        <div class="property-row">
+          <label>Opacidade</label>
+          <input type="range" id="materialOpacity" min="0" max="1" step="0.1" value="1" style="flex:1" />
+        </div>
+      </div>
+
+      <div class="export-options">
+        <h4>Exportar Objeto</h4>
+        <button class="btn btn-secondary export-btn" id="btnExportOBJ">Exportar OBJ</button>
+        <button class="btn btn-secondary export-btn" id="btnExportGLTF">Exportar GLTF</button>
+        <button class="btn btn-secondary export-btn" id="btnExportSTL">Exportar STL</button>
+        <button class="btn btn-primary export-btn" id="btnDeleteObject">Remover Objeto</button>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Three.js -->
+  <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
+  <script src="https://unpkg.com/three@0.158.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://unpkg.com/three@0.158.0/examples/js/exporters/OBJExporter.js"></script>
+  <script src="https://unpkg.com/three@0.158.0/examples/js/exporters/GLTFExporter.js"></script>
+  <script src="https://unpkg.com/three@0.158.0/examples/js/exporters/STLExporter.js"></script>
+
+  <script>
+    // ===== Frame3D Studio - Image to 3D Converter =====
+
+    class Frame3DStudio {
+      constructor() {
+        this.scene = null;
+        this.camera = null;
+        this.renderer = null;
+        this.controls = null;
+        this.objects = [];
+        this.selectedObject = null;
+        this.objectCounter = 0;
+        this.currentImage = null;
+        this.wireframeMode = false;
+        this.textureMode = true;
+
+        this.init();
+        this.setupEventListeners();
+        this.animate();
       }
-      window.frame3d.placingType = type;
-      if(window.orbitControls) window.orbitControls.enabled = false;
-      document.body.style.cursor = 'crosshair';
-      const top = document.querySelector('.viewport-top div');
-      if(top) top.textContent = 'Clique no cenário para posicionar: ' + type;
-      if(statusEl) statusEl.textContent = 'Pronto para posicionar: ' + type;
 
-      // Visual feedback
-      const items = document.querySelectorAll('.asset-item');
-      items.forEach(item => {
-        if(item.getAttribute('data-type') === type){
-          item.style.background = 'rgba(14, 165, 233, 0.2)';
-        } else {
-          item.style.background = '';
-        }
-      });
-    };
-    
-    document.addEventListener('DOMContentLoaded', ()=>{
-      const statusEl = document.getElementById('jsStatus');
-      try{
-      if(typeof THREE === 'undefined') throw new Error('Three.js not loaded');
-      // Three.js scene setup
-      const canvas = document.getElementById('glcanvas');
-      const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
-      renderer.setPixelRatio(window.devicePixelRatio);
-      renderer.setClearColor(0xe2e8f0);
-
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 1000);
-      camera.position.set(3, 3, 6);
-
-      window.orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
-      window.orbitControls.enableDamping = true;
-      window.orbitControls.dampingFactor = 0.05;
-      window.orbitControls.screenSpacePanning = true;
-
-      const ambient = new THREE.HemisphereLight(0xffffff, 0x444444, 0.6);
-      scene.add(ambient);
-      const dir = new THREE.DirectionalLight(0xffffff, 0.8);
-      dir.position.set(5,10,7);
-      scene.add(dir);
-
-      // grid
-      const grid = new THREE.GridHelper(20, 40, 0x94a3b8, 0xd1d5db);
-      scene.add(grid);
-
-      // object registry & selection
-      const objects = [];
-      let selected = null;
-
-      function resize(){
-        const w = canvas.clientWidth;
-        const h = canvas.clientHeight;
-        if (canvas.width !== w || canvas.height !== h) {
-          renderer.setSize(w, h, false);
-          camera.aspect = w / h;
-          camera.updateProjectionMatrix();
-        }
-      }
-
-      function animate(){
-        resize();
-        window.orbitControls.update();
-        renderer.render(scene, camera);
-        requestAnimationFrame(animate);
-      }
-      requestAnimationFrame(animate);
-
-      // helpers to create objects
-      window.makeCube = function(){ const m = createCubeAt(new THREE.Vector3()); scene.add(m); objects.push(m); selectObject(m); }
-      window.makeSphere = function(){ const m = createSphereAt(new THREE.Vector3()); scene.add(m); objects.push(m); selectObject(m); }
-      window.makePlane = function(){ const m = createPlaneAt(new THREE.Vector3()); scene.add(m); objects.push(m); selectObject(m); }
-
-      let isDragging = false;
-      const planeY = new THREE.Plane(new THREE.Vector3(0,1,0), 0); // ground plane y=0
-
-      // Mark as ready and handle any queued clicks
-      window.frame3d.ready = true;
-      if(window.frame3d.queue.length > 0){
-        window.frame3d.queue.forEach(type => {
-          if(type === '__addCube__'){
-            if(typeof window.makeCube === 'function') window.makeCube();
-          } else {
-            if(window.startPlacing) window.startPlacing(type);
-          }
+      init() {
+        // Setup renderer
+        const canvas = document.getElementById('canvas3d');
+        this.renderer = new THREE.WebGLRenderer({
+          canvas,
+          antialias: true,
+          alpha: true
         });
-        window.frame3d.queue = [];
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        this.renderer.setClearColor(0x0f0f1a);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+        // Setup scene
+        this.scene = new THREE.Scene();
+
+        // Setup camera
+        this.camera = new THREE.PerspectiveCamera(60, 1, 0.1, 1000);
+        this.camera.position.set(3, 3, 5);
+
+        // Setup controls
+        this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+        this.controls.enableDamping = true;
+        this.controls.dampingFactor = 0.05;
+        this.controls.screenSpacePanning = true;
+        this.controls.minDistance = 1;
+        this.controls.maxDistance = 50;
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+        this.scene.add(ambientLight);
+
+        const mainLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        mainLight.position.set(10, 20, 10);
+        mainLight.castShadow = true;
+        mainLight.shadow.mapSize.width = 2048;
+        mainLight.shadow.mapSize.height = 2048;
+        mainLight.shadow.camera.near = 0.5;
+        mainLight.shadow.camera.far = 50;
+        mainLight.shadow.camera.left = -10;
+        mainLight.shadow.camera.right = 10;
+        mainLight.shadow.camera.top = 10;
+        mainLight.shadow.camera.bottom = -10;
+        this.scene.add(mainLight);
+
+        const fillLight = new THREE.DirectionalLight(0x6366f1, 0.3);
+        fillLight.position.set(-5, 5, -5);
+        this.scene.add(fillLight);
+
+        // Grid
+        const gridHelper = new THREE.GridHelper(20, 40, 0x334155, 0x1a1a2e);
+        this.scene.add(gridHelper);
+
+        // Ground plane for shadows
+        const groundGeo = new THREE.PlaneGeometry(20, 20);
+        const groundMat = new THREE.ShadowMaterial({ opacity: 0.3 });
+        const ground = new THREE.Mesh(groundGeo, groundMat);
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.y = -0.01;
+        ground.receiveShadow = true;
+        this.scene.add(ground);
+
+        this.resize();
+        window.addEventListener('resize', () => this.resize());
       }
-      
-      // Update status
-      const statusEl = document.getElementById('jsStatus');
-      if(statusEl) statusEl.textContent = 'Pronto para uso - Clique em um objeto para adicionar';
 
-      function stopPlacing(){
-        window.frame3d.placingType = null;
-        window.orbitControls.enabled = true;
-        document.body.style.cursor = '';
-        const top = document.querySelector('.viewport-top div');
-        if(top) top.textContent = 'Visualização: Perspectiva • Cena: Padrão';
-        const statusEl = document.getElementById('jsStatus');
-        if(statusEl) statusEl.textContent = 'Pronto para uso';
-        
-        // Reset visual feedback
-        const items = document.querySelectorAll('.asset-item');
-        items.forEach(item => item.style.background = '');
+      resize() {
+        const canvas = this.renderer.domElement;
+        const width = canvas.clientWidth;
+        const height = canvas.clientHeight;
+
+        if (canvas.width !== width || canvas.height !== height) {
+          this.renderer.setSize(width, height, false);
+          this.camera.aspect = width / height;
+          this.camera.updateProjectionMatrix();
+        }
       }
 
-      function createCubeAt(pos){
-        const geo = new THREE.BoxGeometry(1,1,1);
-        const mat = new THREE.MeshStandardMaterial({color:0x8888ff});
-        const m = new THREE.Mesh(geo, mat);
-        m.position.copy(pos || new THREE.Vector3());
-        m.name = 'Cube_'+(objects.length+1);
-        return m;
+      animate() {
+        requestAnimationFrame(() => this.animate());
+        this.controls.update();
+        this.renderer.render(this.scene, this.camera);
       }
 
-      function createSphereAt(pos){
-        const geo = new THREE.SphereGeometry(0.6, 32, 24);
-        const mat = new THREE.MeshStandardMaterial({color:0xff8888});
-        const m = new THREE.Mesh(geo, mat);
-        m.position.copy(pos || new THREE.Vector3());
-        m.name = 'Sphere_'+(objects.length+1);
-        return m;
+      // ===== Image Processing =====
+
+      loadImage(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+            img.src = e.target.result;
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
       }
 
-      function createPlaneAt(pos){
-        const geo = new THREE.PlaneGeometry(2,2);
-        const mat = new THREE.MeshStandardMaterial({color:0x88ff88, side:THREE.DoubleSide});
-        const m = new THREE.Mesh(geo, mat);
-        m.rotation.x = -Math.PI/2;
-        m.position.copy(pos || new THREE.Vector3());
-        m.name = 'Plane_'+(objects.length+1);
-        return m;
+      getImageData(img, width, height) {
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        return ctx.getImageData(0, 0, width, height);
       }
 
-      // selection and property binding
-      function selectObject(obj){
-        if(selected && selected.material) selected.material.emissive && (selected.material.emissive.setHex && selected.material.emissive.setHex(0x000000));
-        selected = obj;
-        if(selected && selected.material && selected.material.emissive) selected.material.emissive.setHex(0x113355);
-        updatePropertyPanel();
+      // Calculate brightness/depth from pixel
+      getPixelBrightness(data, index) {
+        const r = data[index];
+        const g = data[index + 1];
+        const b = data[index + 2];
+        return (r * 0.299 + g * 0.587 + b * 0.114) / 255;
       }
 
-      // basic raycast + placing + drag to move
-      const raycaster = new THREE.Raycaster();
-      const mouse = new THREE.Vector2();
-      const _tmpVec = new THREE.Vector3();
+      // Gaussian blur for smoothing
+      gaussianBlur(heightMap, width, height, radius) {
+        if (radius <= 0) return heightMap;
 
-      renderer.domElement.addEventListener('pointerdown', (e)=>{
-        const rect = renderer.domElement.getBoundingClientRect();
-        mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-        mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-        raycaster.setFromCamera(mouse, camera);
+        const result = new Float32Array(heightMap.length);
+        const kernel = this.createGaussianKernel(radius);
+        const size = kernel.length;
+        const half = Math.floor(size / 2);
 
-        if(window.frame3d.placingType){
-          const pos = new THREE.Vector3();
-          if(raycaster.ray.intersectPlane(planeY, pos)){
-            let obj;
-            if(window.frame3d.placingType === 'cube') obj = createCubeAt(pos);
-            if(window.frame3d.placingType === 'sphere') obj = createSphereAt(pos);
-            if(window.frame3d.placingType === 'plane') obj = createPlaneAt(pos);
-            
-            if(obj){
-              scene.add(obj);
-              objects.push(obj);
-              selectObject(obj);
-              const statusEl = document.getElementById('jsStatus');
-              if(statusEl) statusEl.textContent = obj.name + ' criado com sucesso';
+        // Horizontal pass
+        const temp = new Float32Array(heightMap.length);
+        for (let y = 0; y < height; y++) {
+          for (let x = 0; x < width; x++) {
+            let sum = 0;
+            let weightSum = 0;
+            for (let i = 0; i < size; i++) {
+              const nx = x + i - half;
+              if (nx >= 0 && nx < width) {
+                sum += heightMap[y * width + nx] * kernel[i];
+                weightSum += kernel[i];
+              }
+            }
+            temp[y * width + x] = sum / weightSum;
+          }
+        }
+
+        // Vertical pass
+        for (let y = 0; y < height; y++) {
+          for (let x = 0; x < width; x++) {
+            let sum = 0;
+            let weightSum = 0;
+            for (let i = 0; i < size; i++) {
+              const ny = y + i - half;
+              if (ny >= 0 && ny < height) {
+                sum += temp[ny * width + x] * kernel[i];
+                weightSum += kernel[i];
+              }
+            }
+            result[y * width + x] = sum / weightSum;
+          }
+        }
+
+        return result;
+      }
+
+      createGaussianKernel(radius) {
+        const size = radius * 2 + 1;
+        const kernel = new Float32Array(size);
+        const sigma = radius / 3;
+        let sum = 0;
+
+        for (let i = 0; i < size; i++) {
+          const x = i - radius;
+          kernel[i] = Math.exp(-(x * x) / (2 * sigma * sigma));
+          sum += kernel[i];
+        }
+
+        for (let i = 0; i < size; i++) {
+          kernel[i] /= sum;
+        }
+
+        return kernel;
+      }
+
+      // ===== 3D Conversion Methods =====
+
+      async convertToDisplacementMesh(img, settings) {
+        const { resolution, depthScale, smoothing } = settings;
+
+        // Get image data at target resolution
+        const imageData = this.getImageData(img, resolution, resolution);
+        const data = imageData.data;
+
+        // Create height map from image brightness
+        let heightMap = new Float32Array(resolution * resolution);
+        for (let i = 0; i < resolution * resolution; i++) {
+          heightMap[i] = this.getPixelBrightness(data, i * 4);
+        }
+
+        // Apply smoothing
+        heightMap = this.gaussianBlur(heightMap, resolution, resolution, smoothing);
+
+        // Create geometry
+        const geometry = new THREE.PlaneGeometry(4, 4, resolution - 1, resolution - 1);
+        const positions = geometry.attributes.position.array;
+
+        // Apply displacement
+        for (let i = 0; i < positions.length / 3; i++) {
+          const height = heightMap[i] * depthScale;
+          positions[i * 3 + 2] = height;
+        }
+
+        geometry.computeVertexNormals();
+        geometry.attributes.position.needsUpdate = true;
+
+        // Create texture from image
+        const texture = new THREE.Texture(img);
+        texture.needsUpdate = true;
+
+        // Create material
+        const material = new THREE.MeshStandardMaterial({
+          map: texture,
+          side: THREE.DoubleSide,
+          roughness: 0.5,
+          metalness: 0,
+        });
+
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.rotation.x = -Math.PI / 2;
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+
+        return mesh;
+      }
+
+      async convertToExtrusionMesh(img, settings) {
+        const { resolution, depthScale, smoothing } = settings;
+
+        const imageData = this.getImageData(img, resolution, resolution);
+        const data = imageData.data;
+
+        // Find edges/silhouette using alpha or brightness threshold
+        const shape = new THREE.Shape();
+        const threshold = 0.3;
+        let started = false;
+        const points = [];
+
+        // Simple edge detection - trace around the image
+        for (let y = 0; y < resolution; y++) {
+          for (let x = 0; x < resolution; x++) {
+            const idx = (y * resolution + x) * 4;
+            const alpha = data[idx + 3] / 255;
+            const brightness = this.getPixelBrightness(data, idx);
+
+            if (alpha > threshold && brightness > threshold) {
+              points.push(new THREE.Vector2(
+                (x / resolution - 0.5) * 4,
+                (y / resolution - 0.5) * -4
+              ));
             }
           }
-          stopPlacing();
+        }
+
+        // Create convex hull from points for extrusion
+        if (points.length < 3) {
+          // Fallback to simple box if not enough points
+          const geometry = new THREE.BoxGeometry(2, depthScale, 2);
+          const texture = new THREE.Texture(img);
+          texture.needsUpdate = true;
+          const material = new THREE.MeshStandardMaterial({
+            map: texture,
+            roughness: 0.5,
+          });
+          const mesh = new THREE.Mesh(geometry, material);
+          mesh.castShadow = true;
+          return mesh;
+        }
+
+        // Create simplified shape from sampled points
+        const hullPoints = this.convexHull(points);
+        if (hullPoints.length > 2) {
+          shape.moveTo(hullPoints[0].x, hullPoints[0].y);
+          for (let i = 1; i < hullPoints.length; i++) {
+            shape.lineTo(hullPoints[i].x, hullPoints[i].y);
+          }
+          shape.closePath();
+        }
+
+        const extrudeSettings = {
+          depth: depthScale,
+          bevelEnabled: true,
+          bevelThickness: 0.1,
+          bevelSize: 0.05,
+          bevelSegments: 3,
+        };
+
+        const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+
+        const texture = new THREE.Texture(img);
+        texture.needsUpdate = true;
+
+        const material = new THREE.MeshStandardMaterial({
+          map: texture,
+          roughness: 0.5,
+          metalness: 0,
+        });
+
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.rotation.x = -Math.PI / 2;
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+
+        return mesh;
+      }
+
+      convexHull(points) {
+        if (points.length < 3) return points;
+
+        // Sample points to reduce complexity
+        const sampleRate = Math.max(1, Math.floor(points.length / 100));
+        const sampled = points.filter((_, i) => i % sampleRate === 0);
+
+        // Simple convex hull (Graham scan)
+        sampled.sort((a, b) => a.x - b.x || a.y - b.y);
+
+        const cross = (o, a, b) => (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+
+        const lower = [];
+        for (const p of sampled) {
+          while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) {
+            lower.pop();
+          }
+          lower.push(p);
+        }
+
+        const upper = [];
+        for (let i = sampled.length - 1; i >= 0; i--) {
+          const p = sampled[i];
+          while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) {
+            upper.pop();
+          }
+          upper.push(p);
+        }
+
+        lower.pop();
+        upper.pop();
+        return lower.concat(upper);
+      }
+
+      async convertToPointCloud(img, settings) {
+        const { resolution, depthScale } = settings;
+
+        const imageData = this.getImageData(img, resolution, resolution);
+        const data = imageData.data;
+
+        const positions = [];
+        const colors = [];
+
+        for (let y = 0; y < resolution; y++) {
+          for (let x = 0; x < resolution; x++) {
+            const idx = (y * resolution + x) * 4;
+            const r = data[idx] / 255;
+            const g = data[idx + 1] / 255;
+            const b = data[idx + 2] / 255;
+            const a = data[idx + 3] / 255;
+
+            if (a > 0.1) {
+              const brightness = r * 0.299 + g * 0.587 + b * 0.114;
+
+              positions.push(
+                (x / resolution - 0.5) * 4,
+                brightness * depthScale,
+                (y / resolution - 0.5) * 4
+              );
+
+              colors.push(r, g, b);
+            }
+          }
+        }
+
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+        geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+        const material = new THREE.PointsMaterial({
+          size: 0.05,
+          vertexColors: true,
+          sizeAttenuation: true,
+        });
+
+        const points = new THREE.Points(geometry, material);
+        return points;
+      }
+
+      async convertToHeightMap(img, settings) {
+        const { resolution, depthScale, smoothing } = settings;
+
+        const imageData = this.getImageData(img, resolution, resolution);
+        const data = imageData.data;
+
+        // Create height map
+        let heightMap = new Float32Array(resolution * resolution);
+        for (let i = 0; i < resolution * resolution; i++) {
+          heightMap[i] = this.getPixelBrightness(data, i * 4);
+        }
+
+        // Apply smoothing
+        heightMap = this.gaussianBlur(heightMap, resolution, resolution, smoothing);
+
+        // Create box geometry for each height value (voxel-like)
+        const group = new THREE.Group();
+        const boxSize = 4 / resolution;
+        const boxGeo = new THREE.BoxGeometry(boxSize * 0.9, 1, boxSize * 0.9);
+
+        // Optimize: create instanced mesh
+        const material = new THREE.MeshStandardMaterial({
+          color: 0x6366f1,
+          roughness: 0.5,
+          metalness: 0.1,
+        });
+
+        // Sample for performance
+        const sampleRate = Math.max(1, Math.floor(resolution / 32));
+
+        for (let y = 0; y < resolution; y += sampleRate) {
+          for (let x = 0; x < resolution; x += sampleRate) {
+            const height = heightMap[y * resolution + x] * depthScale;
+            if (height > 0.01) {
+              const box = new THREE.Mesh(boxGeo, material.clone());
+              box.position.set(
+                (x / resolution - 0.5) * 4,
+                height / 2,
+                (y / resolution - 0.5) * 4
+              );
+              box.scale.y = height;
+
+              // Color based on original image
+              const idx = (y * resolution + x) * 4;
+              box.material.color.setRGB(
+                data[idx] / 255,
+                data[idx + 1] / 255,
+                data[idx + 2] / 255
+              );
+
+              box.castShadow = true;
+              box.receiveShadow = true;
+              group.add(box);
+            }
+          }
+        }
+
+        return group;
+      }
+
+      // ===== Object Management =====
+
+      async createObjectFromImage(file) {
+        this.showLoading('Carregando imagem...');
+
+        try {
+          const img = await this.loadImage(file);
+          this.currentImage = img;
+
+          this.showLoading('Convertendo para 3D...');
+
+          const method = document.getElementById('conversionMethod').value;
+          const settings = {
+            resolution: parseInt(document.getElementById('meshResolution').value),
+            depthScale: parseFloat(document.getElementById('depthScale').value),
+            smoothing: parseInt(document.getElementById('smoothing').value),
+          };
+
+          let object;
+
+          switch (method) {
+            case 'displacement':
+              object = await this.convertToDisplacementMesh(img, settings);
+              break;
+            case 'extrusion':
+              object = await this.convertToExtrusionMesh(img, settings);
+              break;
+            case 'pointcloud':
+              object = await this.convertToPointCloud(img, settings);
+              break;
+            case 'heightmap':
+              object = await this.convertToHeightMap(img, settings);
+              break;
+            default:
+              object = await this.convertToDisplacementMesh(img, settings);
+          }
+
+          // Add metadata
+          this.objectCounter++;
+          object.userData = {
+            id: this.objectCounter,
+            name: `Objeto_${this.objectCounter}`,
+            method: method,
+            sourceImage: img.src,
+          };
+
+          // Position slightly above ground
+          object.position.y = 0.5;
+
+          // Add to scene
+          this.scene.add(object);
+          this.objects.push(object);
+
+          // Update UI
+          this.updateObjectsList();
+          this.selectObject(object);
+          this.hideEmptyState();
+
+          this.hideLoading();
+          this.showStatus(`Objeto criado: ${object.userData.name}`, 'success');
+
+          return object;
+        } catch (error) {
+          console.error('Error creating object:', error);
+          this.hideLoading();
+          this.showStatus('Erro ao criar objeto: ' + error.message, 'error');
+          throw error;
+        }
+      }
+
+      selectObject(obj) {
+        // Deselect previous
+        if (this.selectedObject && this.selectedObject.material) {
+          if (this.selectedObject.material.emissive) {
+            this.selectedObject.material.emissive.setHex(0x000000);
+          }
+        }
+
+        this.selectedObject = obj;
+
+        // Highlight selected
+        if (obj && obj.material && obj.material.emissive) {
+          obj.material.emissive.setHex(0x222244);
+        }
+
+        // Update properties panel
+        this.updatePropertiesPanel();
+
+        // Update objects list selection
+        document.querySelectorAll('.object-item').forEach(item => {
+          item.classList.toggle('selected', item.dataset.id == obj?.userData?.id);
+        });
+      }
+
+      deleteSelectedObject() {
+        if (!this.selectedObject) return;
+
+        // Remove from scene
+        this.scene.remove(this.selectedObject);
+
+        // Dispose geometry and material
+        if (this.selectedObject.geometry) {
+          this.selectedObject.geometry.dispose();
+        }
+        if (this.selectedObject.material) {
+          if (Array.isArray(this.selectedObject.material)) {
+            this.selectedObject.material.forEach(m => m.dispose());
+          } else {
+            this.selectedObject.material.dispose();
+          }
+        }
+
+        // Remove from array
+        this.objects = this.objects.filter(o => o !== this.selectedObject);
+
+        this.selectedObject = null;
+        this.updateObjectsList();
+        this.updatePropertiesPanel();
+
+        if (this.objects.length === 0) {
+          this.showEmptyState();
+        }
+
+        this.showStatus('Objeto removido', 'success');
+      }
+
+      // ===== UI Updates =====
+
+      updateObjectsList() {
+        const list = document.getElementById('objectsList');
+        const header = list.querySelector('h3');
+        list.innerHTML = '';
+        list.appendChild(header);
+
+        this.objects.forEach(obj => {
+          const item = document.createElement('div');
+          item.className = 'object-item' + (obj === this.selectedObject ? ' selected' : '');
+          item.dataset.id = obj.userData.id;
+          item.innerHTML = `
+            <div class="object-thumb">&#127912;</div>
+            <div class="object-info">
+              <h4>${obj.userData.name}</h4>
+              <span>${obj.userData.method}</span>
+            </div>
+          `;
+          item.addEventListener('click', () => this.selectObject(obj));
+          list.appendChild(item);
+        });
+      }
+
+      updatePropertiesPanel() {
+        const obj = this.selectedObject;
+
+        document.getElementById('selectedObjectName').textContent = obj ? obj.userData.name : 'Nenhum objeto selecionado';
+        document.getElementById('selectedObjectInfo').textContent = obj ? `Metodo: ${obj.userData.method}` : 'Selecione um objeto para editar';
+
+        if (obj) {
+          document.getElementById('posX').value = obj.position.x.toFixed(2);
+          document.getElementById('posY').value = obj.position.y.toFixed(2);
+          document.getElementById('posZ').value = obj.position.z.toFixed(2);
+
+          document.getElementById('rotX').value = THREE.MathUtils.radToDeg(obj.rotation.x).toFixed(0);
+          document.getElementById('rotY').value = THREE.MathUtils.radToDeg(obj.rotation.y).toFixed(0);
+          document.getElementById('rotZ').value = THREE.MathUtils.radToDeg(obj.rotation.z).toFixed(0);
+
+          document.getElementById('scaleX').value = obj.scale.x.toFixed(2);
+          document.getElementById('scaleY').value = obj.scale.y.toFixed(2);
+          document.getElementById('scaleZ').value = obj.scale.z.toFixed(2);
+
+          if (obj.material && obj.material.color) {
+            document.getElementById('materialColor').value = '#' + obj.material.color.getHexString();
+            document.getElementById('materialMetalness').value = obj.material.metalness || 0;
+            document.getElementById('materialRoughness').value = obj.material.roughness || 0.5;
+            document.getElementById('materialOpacity').value = obj.material.opacity || 1;
+          }
+        }
+      }
+
+      showLoading(text) {
+        document.getElementById('loadingText').textContent = text;
+        document.getElementById('loadingOverlay').classList.add('active');
+      }
+
+      hideLoading() {
+        document.getElementById('loadingOverlay').classList.remove('active');
+      }
+
+      showStatus(text, type = '') {
+        const bar = document.getElementById('statusBar');
+        bar.textContent = text;
+        bar.className = 'status-bar' + (type ? ' ' + type : '');
+
+        setTimeout(() => {
+          bar.className = 'status-bar';
+          bar.textContent = 'Pronto para uso';
+        }, 3000);
+      }
+
+      showEmptyState() {
+        document.getElementById('emptyState').style.display = 'flex';
+      }
+
+      hideEmptyState() {
+        document.getElementById('emptyState').style.display = 'none';
+      }
+
+      // ===== Export Functions =====
+
+      exportOBJ() {
+        if (!this.selectedObject) {
+          this.showStatus('Selecione um objeto para exportar', 'error');
           return;
         }
 
-        const hits = raycaster.intersectObjects(objects, false);
-        if(hits.length){
-          const obj = hits[0].object;
-          selectObject(obj);
-          if(obj === selected){ isDragging = true; window.orbitControls.enabled = false; }
-        } else { selectObject(null); }
-      });
-
-      renderer.domElement.addEventListener('pointermove', (e)=>{
-        const rect = renderer.domElement.getBoundingClientRect();
-        mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-        mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-        if(isDragging && selected){
-          raycaster.setFromCamera(mouse, camera);
-          const pos = new THREE.Vector3();
-          if(raycaster.ray.intersectPlane(planeY, pos)){
-            selected.position.copy(pos);
-            updatePropertyPanel();
-          }
-        }
-      });
-
-      window.addEventListener('pointerup', ()=>{ if(isDragging){ isDragging = false; window.orbitControls.enabled = true; } });
-
-      // property inputs by ID
-      const posInput = document.getElementById('posInput');
-      const scaleInput = document.getElementById('scaleInput');
-      const rotInput = document.getElementById('rotInput');
-
-      function parseVec3(str){ return str.split(',').map(s=>parseFloat(s.trim())||0); }
-
-      function updatePropertyPanel(){
-        if(!selected) return;
-        const p = selected.position; posInput.value = `${p.x.toFixed(2)}, ${p.y.toFixed(2)}, ${p.z.toFixed(2)}`;
-        const s = selected.scale; scaleInput.value = `${s.x.toFixed(2)}, ${s.y.toFixed(2)}, ${s.z.toFixed(2)}`;
-        const r = selected.rotation; rotInput.value = `${(r.x).toFixed(2)}, ${(r.y).toFixed(2)}, ${(r.z).toFixed(2)}`;
+        const exporter = new THREE.OBJExporter();
+        const result = exporter.parse(this.selectedObject);
+        this.downloadFile(result, `${this.selectedObject.userData.name}.obj`, 'text/plain');
+        this.showStatus('Arquivo OBJ exportado', 'success');
       }
 
-      posInput.addEventListener('change', ()=>{ if(!selected) return; const [x,y,z] = parseVec3(posInput.value); selected.position.set(x,y,z); });
-      scaleInput.addEventListener('change', ()=>{ if(!selected) return; const [x,y,z] = parseVec3(scaleInput.value); selected.scale.set(x||1,y||1,z||1); });
-      rotInput.addEventListener('change', ()=>{ if(!selected) return; const [x,y,z] = parseVec3(rotInput.value); selected.rotation.set(x,y,z); });
+      exportGLTF() {
+        if (!this.selectedObject) {
+          this.showStatus('Selecione um objeto para exportar', 'error');
+          return;
+        }
 
-      // expose for debugging
-      window._scene = scene; window._objects = objects;
-      window.addEventListener('resize', ()=>{ resize(); });
-      if(statusEl) statusEl.textContent = 'Status: ready (Three.js loaded)';
-      }catch(err){
-        console.error('Initialization error:', err);
-        if(statusEl) statusEl.textContent = 'Status: error - ' + err.message;
-        // fallback: make asset buttons show alerts so user sees they work
-        document.querySelectorAll('.asset-item').forEach(it=>{
-          it.addEventListener('click', ()=>{ alert('Asset clicked: '+(it.getAttribute('data-type')||'unknown')); });
+        const exporter = new THREE.GLTFExporter();
+        exporter.parse(this.selectedObject, (result) => {
+          const output = JSON.stringify(result, null, 2);
+          this.downloadFile(output, `${this.selectedObject.userData.name}.gltf`, 'application/json');
+          this.showStatus('Arquivo GLTF exportado', 'success');
+        }, { binary: false });
+      }
+
+      exportSTL() {
+        if (!this.selectedObject) {
+          this.showStatus('Selecione um objeto para exportar', 'error');
+          return;
+        }
+
+        const exporter = new THREE.STLExporter();
+        const result = exporter.parse(this.selectedObject);
+        this.downloadFile(result, `${this.selectedObject.userData.name}.stl`, 'text/plain');
+        this.showStatus('Arquivo STL exportado', 'success');
+      }
+
+      downloadFile(content, filename, mimeType) {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }
+
+      // ===== Event Listeners =====
+
+      setupEventListeners() {
+        // Upload area
+        const uploadArea = document.getElementById('uploadArea');
+        const imageInput = document.getElementById('imageInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImage = document.getElementById('previewImage');
+
+        uploadArea.addEventListener('click', () => imageInput.click());
+
+        uploadArea.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          uploadArea.classList.add('drag-over');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+          uploadArea.classList.remove('drag-over');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+          e.preventDefault();
+          uploadArea.classList.remove('drag-over');
+          const file = e.dataTransfer.files[0];
+          if (file && file.type.startsWith('image/')) {
+            this.handleImageSelect(file);
+          }
+        });
+
+        imageInput.addEventListener('change', (e) => {
+          const file = e.target.files[0];
+          if (file) {
+            this.handleImageSelect(file);
+          }
+        });
+
+        // Preview actions
+        document.getElementById('btnChangeImage').addEventListener('click', () => {
+          imageInput.click();
+        });
+
+        document.getElementById('btnConvert').addEventListener('click', () => {
+          if (this.currentImageFile) {
+            this.createObjectFromImage(this.currentImageFile);
+          }
+        });
+
+        // Settings sliders
+        document.getElementById('meshResolution').addEventListener('input', (e) => {
+          document.getElementById('resolutionValue').textContent = e.target.value;
+        });
+
+        document.getElementById('depthScale').addEventListener('input', (e) => {
+          document.getElementById('depthValue').textContent = parseFloat(e.target.value).toFixed(1);
+        });
+
+        document.getElementById('smoothing').addEventListener('input', (e) => {
+          document.getElementById('smoothValue').textContent = e.target.value;
+        });
+
+        // Viewport controls
+        document.getElementById('btnReset').addEventListener('click', () => {
+          this.camera.position.set(3, 3, 5);
+          this.controls.reset();
+        });
+
+        document.getElementById('btnWireframe').addEventListener('click', (e) => {
+          this.wireframeMode = !this.wireframeMode;
+          e.target.classList.toggle('active', this.wireframeMode);
+          this.objects.forEach(obj => {
+            if (obj.material) {
+              obj.material.wireframe = this.wireframeMode;
+            }
+            if (obj.children) {
+              obj.children.forEach(child => {
+                if (child.material) {
+                  child.material.wireframe = this.wireframeMode;
+                }
+              });
+            }
+          });
+        });
+
+        document.getElementById('btnTexture').addEventListener('click', (e) => {
+          this.textureMode = !this.textureMode;
+          e.target.classList.toggle('active', this.textureMode);
+          this.objects.forEach(obj => {
+            if (obj.material && obj.material.map) {
+              obj.material.map.visible = this.textureMode;
+              obj.material.needsUpdate = true;
+            }
+          });
+        });
+
+        // Property inputs
+        ['posX', 'posY', 'posZ'].forEach(id => {
+          document.getElementById(id).addEventListener('change', (e) => {
+            if (this.selectedObject) {
+              const axis = id.slice(-1).toLowerCase();
+              this.selectedObject.position[axis] = parseFloat(e.target.value) || 0;
+            }
+          });
+        });
+
+        ['rotX', 'rotY', 'rotZ'].forEach(id => {
+          document.getElementById(id).addEventListener('change', (e) => {
+            if (this.selectedObject) {
+              const axis = id.slice(-1).toLowerCase();
+              this.selectedObject.rotation[axis] = THREE.MathUtils.degToRad(parseFloat(e.target.value) || 0);
+            }
+          });
+        });
+
+        ['scaleX', 'scaleY', 'scaleZ'].forEach(id => {
+          document.getElementById(id).addEventListener('change', (e) => {
+            if (this.selectedObject) {
+              const axis = id.slice(-1).toLowerCase();
+              this.selectedObject.scale[axis] = parseFloat(e.target.value) || 1;
+            }
+          });
+        });
+
+        // Material properties
+        document.getElementById('materialColor').addEventListener('input', (e) => {
+          if (this.selectedObject && this.selectedObject.material) {
+            this.selectedObject.material.color.setStyle(e.target.value);
+          }
+        });
+
+        document.getElementById('materialMetalness').addEventListener('input', (e) => {
+          if (this.selectedObject && this.selectedObject.material) {
+            this.selectedObject.material.metalness = parseFloat(e.target.value);
+          }
+        });
+
+        document.getElementById('materialRoughness').addEventListener('input', (e) => {
+          if (this.selectedObject && this.selectedObject.material) {
+            this.selectedObject.material.roughness = parseFloat(e.target.value);
+          }
+        });
+
+        document.getElementById('materialOpacity').addEventListener('input', (e) => {
+          if (this.selectedObject && this.selectedObject.material) {
+            this.selectedObject.material.opacity = parseFloat(e.target.value);
+            this.selectedObject.material.transparent = parseFloat(e.target.value) < 1;
+          }
+        });
+
+        // Export buttons
+        document.getElementById('btnExportOBJ').addEventListener('click', () => this.exportOBJ());
+        document.getElementById('btnExportGLTF').addEventListener('click', () => this.exportGLTF());
+        document.getElementById('btnExportSTL').addEventListener('click', () => this.exportSTL());
+        document.getElementById('btnDeleteObject').addEventListener('click', () => this.deleteSelectedObject());
+
+        // Header actions
+        document.getElementById('btnNewProject').addEventListener('click', () => {
+          if (this.objects.length > 0 && !confirm('Deseja criar um novo projeto? Todos os objetos serao removidos.')) {
+            return;
+          }
+          this.objects.forEach(obj => {
+            this.scene.remove(obj);
+            if (obj.geometry) obj.geometry.dispose();
+            if (obj.material) {
+              if (Array.isArray(obj.material)) {
+                obj.material.forEach(m => m.dispose());
+              } else {
+                obj.material.dispose();
+              }
+            }
+          });
+          this.objects = [];
+          this.selectedObject = null;
+          this.objectCounter = 0;
+          this.updateObjectsList();
+          this.updatePropertiesPanel();
+          this.showEmptyState();
+
+          // Reset image preview
+          document.getElementById('imagePreview').classList.remove('active');
+          document.getElementById('uploadArea').style.display = 'block';
+
+          this.showStatus('Novo projeto criado', 'success');
+        });
+
+        document.getElementById('btnExportAll').addEventListener('click', () => {
+          if (this.objects.length === 0) {
+            this.showStatus('Nenhum objeto para exportar', 'error');
+            return;
+          }
+
+          // Export scene as GLTF
+          const exporter = new THREE.GLTFExporter();
+          exporter.parse(this.scene, (result) => {
+            const output = JSON.stringify(result, null, 2);
+            this.downloadFile(output, 'frame3d_scene.gltf', 'application/json');
+            this.showStatus('Cena exportada como GLTF', 'success');
+          }, { binary: false });
+        });
+
+        // Raycasting for object selection
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        this.renderer.domElement.addEventListener('click', (e) => {
+          const rect = this.renderer.domElement.getBoundingClientRect();
+          mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+          mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+          raycaster.setFromCamera(mouse, this.camera);
+          const intersects = raycaster.intersectObjects(this.objects, true);
+
+          if (intersects.length > 0) {
+            let obj = intersects[0].object;
+            // Find parent if it's a group
+            while (obj.parent && !obj.userData.id && obj.parent !== this.scene) {
+              obj = obj.parent;
+            }
+            if (obj.userData.id) {
+              this.selectObject(obj);
+            }
+          }
         });
       }
+
+      handleImageSelect(file) {
+        this.currentImageFile = file;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          document.getElementById('previewImage').src = e.target.result;
+          document.getElementById('uploadArea').style.display = 'none';
+          document.getElementById('imagePreview').classList.add('active');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // Initialize app
+    window.addEventListener('DOMContentLoaded', () => {
+      window.frame3d = new Frame3DStudio();
     });
-    </script>
-  </body>
+  </script>
+</body>
 </html>
